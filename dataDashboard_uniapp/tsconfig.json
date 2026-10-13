@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"lib": ["ESNext", "DOM"],
+		// 严格模式，尽早暴露类型问题
+		"strict": true,
+		"jsx": "preserve",
+		"sourceMap": true,
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		// 允许 import 第三方 js（如 utils/ucharts/u-charts.js）
+		"allowJs": true,
+		// 跳过第三方库的类型检查，避免 node_modules 报错
+		"skipLibCheck": true,
+		"paths": {
+			// uni-app 中 @ 指向项目根目录（TS7 起 paths 直接相对 tsconfig 解析）
+			"@/*": ["./*"]
+		},
+		// 引入 uni-app 全局 API 类型（uni、wx、getApp、getCurrentPages 等）
+		"types": ["@dcloudio/types"]
+	},
+	"include": ["**/*.ts", "**/*.tsx", "**/*.d.ts", "**/*.vue"],
+	"exclude": ["node_modules", "unpackage"]
+}

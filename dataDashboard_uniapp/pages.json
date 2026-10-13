@@ -1,0 +1,71 @@
+{
+	"pages": [
+		{
+			"path": "pages/home/index",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"onReachBottomDistance": 50
+			}
+		},
+		{
+			"path": "pages/aiAnalyse/index",
+			"style": {
+				"navigationBarTitleText": "AI分析"
+			}
+		},
+		{
+			"path": "pages/user/index",
+			"style": {
+				"navigationBarTitleText": "个人信息"
+			}
+		},
+		{
+			"path": "pages/about/index",
+			"style": {
+				"navigationBarTitleText": "关于"
+			}
+		},
+		{
+			"path": "pages/detail/index",
+			"style": {
+				"navigationBarTitleText": "详情"
+			}
+		}
+	],
+	"tabBar": {
+		"color": "#9AA3B2",
+		"selectedColor": "#2E63E8",
+		"backgroundColor": "#FFFFFF",
+		"borderStyle": "white",
+		"list": [
+			{
+				"pagePath": "pages/home/index",
+				"text": "首页",
+				"iconPath": "static/icon/home.png",
+				"selectedIconPath": "static/icon/home-active.png"
+			},
+			{
+				"pagePath": "pages/aiAnalyse/index",
+				"text": "智能分析",
+				"iconPath": "static/icon/ai.png",
+				"selectedIconPath": "static/icon/ai-active.png"
+			},
+			{
+				"pagePath": "pages/user/index",
+				"text": "我的",
+				"iconPath": "static/icon/user.png",
+				"selectedIconPath": "static/icon/user-active.png"
+			}
+		]
+	},
+	"navigationBar": {
+		"custom": true
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "首页",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {}
+}
