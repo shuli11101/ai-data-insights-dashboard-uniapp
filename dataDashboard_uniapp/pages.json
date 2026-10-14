@@ -10,7 +10,15 @@
 		{
 			"path": "pages/aiAnalyse/index",
 			"style": {
-				"navigationBarTitleText": "AI分析"
+				"navigationBarTitleText": "AI分析",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/aiAnalyseHome/index",
+			"style": {
+				"navigationBarTitleText": "全部任务",
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -45,7 +53,7 @@
 				"selectedIconPath": "static/icon/home-active.png"
 			},
 			{
-				"pagePath": "pages/aiAnalyse/index",
+				"pagePath": "pages/aiAnalyseHome/index",
 				"text": "智能分析",
 				"iconPath": "static/icon/ai.png",
 				"selectedIconPath": "static/icon/ai-active.png"
@@ -62,6 +70,7 @@
 		"custom": true
 	},
 	"globalStyle": {
+		"navigationStyle": "custom",
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "首页",
 		"navigationBarBackgroundColor": "#F8F8F8",

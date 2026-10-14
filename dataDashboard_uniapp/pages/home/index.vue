@@ -1,14 +1,12 @@
 <template>
 	<view class="home">
 		<view class="main">
-			<!-- 顶部标题栏（页面自定义导航栏，padding-top 用于避开状态栏） -->
+			<!-- 顶部搜索栏（自定义导航栏，padding-top 用于避开状态栏） -->
 			<view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-				<text class="navbar-brand">JobVision</text>
-				<view class="navbar-actions">
-					<text class="navbar-more">•••</text>
-					<view class="navbar-help">
-						<text class="navbar-help-icon">?</text>
-					</view>
+				<view class="search">
+					<view class="search-icon"></view>
+					<input class="search-input" v-model="query.keyword" type="text" confirm-type="search"
+						placeholder="搜索岗位、公司" placeholder-class="search-placeholder" @confirm="onSearch" />
 				</view>
 			</view>
 
@@ -52,17 +50,28 @@
 			</view>
 			<!-- 岗位卡片：一行两个 -->
 			<view class="content">
-				<view class="card" @click="toDetail(item)" v-for="item in jobList" :key="item.id">
-					<view class="header">
-						<view class="header-title">
-							<text class="title">{{ item.job_name }}</text>
+				<view class="card" :class="{ fullCard: index >= 8 && (index - 8) % 9 === 0 }" @click="toDetail(item)"
+					v-for="(item, index) in jobList" :key="item.id">
+					<!-- 主体信息区 -->
+					<view class="card-body">
+						<view class="header">
+							<view class="header-title">
+								<text class="title">{{ item.job_name }}</text>
+							</view>
+							<text class="company">{{ item.company }}</text>
 						</view>
-						<text class="company">{{ item.company }}</text>
+						<text class="salary">{{ item.salary_min }} - {{ item.salary_max }} K</text>
+						<view class="skill-tags">
+							<text class="tag" v-if="item.isDescription">查看详情</text>
+							<template v-else>
+								<text class="tag" v-for="tag in item.skill_tags" :key="tag">{{ tag }}</text>
+							</template>
+						</view>
 					</view>
-					<text class="salary">{{ item.salary_min }} - {{ item.salary_max }} K</text>
-					<view class="skill-tags">
-						<text class="tag" v-if="item.isDescription">查看详情</text>
-						<text class="tag" v-else>{{ item.skill_tags[0] }}</text>
+					<!-- 右侧信息区：仅整行卡片展示（见样式 .fullCard） -->
+					<view class="card-side">
+						<text class="card-side-exp">{{ item.experience }}</text>
+						<text class="card-side-more">查看详情</text>
 					</view>
 				</view>
 			</view>
@@ -164,6 +173,15 @@ const loadMore = () => {
 
 onReachBottom(loadMore)
 
+// 触发搜索：清空列表并回到第 1 页重新拉取
+const onSearch = () => {
+	jobPagination.page = 1
+	jobPagination.total = 0
+	jobList.value = []
+	finished.value = false
+	getJobLists()
+}
+
 // 点击跳转到详情页
 const toDetail = (item: JobPositions) => {
 	uni.navigateTo({
@@ -178,6 +196,12 @@ onMounted(() => {
 </script>
 
 <style lang="scss">
+/* 搜索框占位符：placeholder-class 需为独立类名，不能嵌套在页面根类里 */
+.search-placeholder {
+	font-size: 28rpx;
+	color: #9aa0a6;
+}
+
 .home {
 	width: 100%;
 	min-height: 100vh;
@@ -192,47 +216,48 @@ onMounted(() => {
 			align-items: center;
 			justify-content: space-between;
 			padding: 12rpx 0 20rpx;
+			height: 120rpx;
 
-			.navbar-brand {
-				font-size: 42rpx;
-				font-weight: bold;
-				line-height: 1.2;
-				color: #101b33;
-			}
-
-			// 右侧操作胶囊（••• + ?）
-			.navbar-actions {
+			// 搜索框：撑满标题栏
+			.search {
 				display: flex;
 				align-items: center;
-				height: 50rpx;
-				padding: 0 14rpx;
-				background-color: #e9edf5;
-				border-radius: 25rpx;
+				box-sizing: border-box;
+				flex: 1;
+				height: 80rpx;
+				padding: 0 26rpx;
+				background-color: #ffffff;
+				border-radius: 40rpx;
+				box-shadow: 0 4rpx 14rpx rgba(16, 27, 51, 0.06);
 
-				.navbar-more {
-					font-size: 26rpx;
-					font-weight: bold;
-					line-height: 1;
-					letter-spacing: 2rpx;
-					color: #5a6478;
-				}
-
-				.navbar-help {
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					width: 32rpx;
-					height: 32rpx;
-					margin-left: 14rpx;
-					border: 2rpx solid #5a6478;
+				// 放大镜：圆 + 45° 手柄
+				.search-icon {
+					position: relative;
+					flex-shrink: 0;
+					width: 22rpx;
+					height: 22rpx;
+					border: 3rpx solid #9aa0a6;
 					border-radius: 50%;
 
-					.navbar-help-icon {
-						font-size: 22rpx;
-						font-weight: bold;
-						line-height: 1;
-						color: #5a6478;
+					&::after {
+						content: '';
+						position: absolute;
+						right: -9rpx;
+						bottom: -7rpx;
+						width: 12rpx;
+						height: 3rpx;
+						background-color: #9aa0a6;
+						border-radius: 3rpx;
+						transform: rotate(45deg);
 					}
+				}
+
+				.search-input {
+					flex: 1;
+					min-width: 0;
+					margin-left: 18rpx;
+					font-size: 28rpx;
+					color: #101b33;
 				}
 			}
 		}
@@ -403,6 +428,8 @@ onMounted(() => {
 			justify-content: space-between;
 			margin-top: 24rpx;
 
+
+
 			.card {
 				box-sizing: border-box;
 				width: 48%;
@@ -411,6 +438,17 @@ onMounted(() => {
 				background-color: #ffffff;
 				border-radius: 16rpx;
 				box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.06);
+
+				// 主体信息区：整行卡片下与右侧信息区并排，负责占满剩余宽度
+				.card-body {
+					flex: 1;
+					min-width: 0;
+				}
+
+				// 右侧信息区：默认隐藏，仅在整行卡片中展示
+				.card-side {
+					display: none;
+				}
 
 				.header {
 					display: flex;
@@ -476,6 +514,61 @@ onMounted(() => {
 						color: #8a9099;
 						background-color: #f5f6f8;
 						border-radius: 8rpx;
+					}
+				}
+			}
+
+			// 一整行卡片：左右分栏把整行铺满，避免内容单薄
+			.fullCard {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				width: 100%;
+
+				// 整行卡片是视觉重心，标题适当放大
+				.header .header-title .title {
+					font-size: 34rpx;
+				}
+
+				// 薪资作为关键信息，整行卡片下用主色强调
+				.salary {
+					margin-top: 14rpx;
+					font-size: 30rpx;
+					font-weight: bold;
+					color: #2e63e8;
+				}
+
+				// 横向空间充足，技能标签换行展示全部
+				.skill-tags {
+					flex-wrap: wrap;
+					overflow: visible;
+				}
+
+				// 右侧信息区：经验标签 + 行动按钮，把右侧空间用满
+				.card-side {
+					display: flex;
+					flex-direction: column;
+					align-items: flex-end;
+					flex-shrink: 0;
+					margin-left: 28rpx;
+
+					.card-side-exp {
+						padding: 6rpx 16rpx;
+						font-size: 22rpx;
+						line-height: 1.2;
+						color: #2e63e8;
+						background-color: #eef2fd;
+						border-radius: 999rpx;
+					}
+
+					.card-side-more {
+						margin-top: 14rpx;
+						padding: 8rpx 22rpx;
+						font-size: 22rpx;
+						line-height: 1.2;
+						color: #ffffff;
+						background-color: #2e63e8;
+						border-radius: 999rpx;
 					}
 				}
 			}
