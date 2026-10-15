@@ -109,8 +109,8 @@ const onBack = () => {
 		.back-btn {
 			position: absolute;
 			left: 0;
-			width: 84rpx;
-			height: 84rpx;
+			width: 64rpx;
+			height: 64rpx;
 		}
 
 		/* 分段控件：172×40，胶囊轨道，内缩 3px 作为选中块留白 */

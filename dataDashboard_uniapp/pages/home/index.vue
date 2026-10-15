@@ -1,14 +1,8 @@
 <template>
 	<view class="home">
 		<view class="main">
-			<!-- 顶部搜索栏（自定义导航栏，padding-top 用于避开状态栏） -->
-			<view class="navbar" :style="{ paddingTop: statusBarHeight + 'px' }">
-				<view class="search">
-					<view class="search-icon"></view>
-					<input class="search-input" v-model="query.keyword" type="text" confirm-type="search"
-						placeholder="搜索岗位、公司" placeholder-class="search-placeholder" @confirm="onSearch" />
-				</view>
-			</view>
+			<!-- 搜索栏 -->
+			<searchInput @search="onSearch"></searchInput>
 
 			<!-- 顶部 Hero 渐变卡片 -->
 			<swiper class="hero-swiper" :autoplay="true" :interval="3000" :current="currentSlide"
@@ -62,7 +56,7 @@
 						</view>
 						<text class="salary">{{ item.salary_min }} - {{ item.salary_max }} K</text>
 						<view class="skill-tags">
-							<text class="tag" v-if="item.isDescription">查看详情</text>
+							<text class="tag tag-link" v-if="item.isDescription">查看详情</text>
 							<template v-else>
 								<text class="tag" v-for="tag in item.skill_tags" :key="tag">{{ tag }}</text>
 							</template>
@@ -80,28 +74,17 @@
 </template>
 
 <script setup lang="ts">
-import { getJobList } from '@/api/server'
 import { onMounted, reactive, ref } from 'vue'
 import { onReachBottom } from '@dcloudio/uni-app'
 
-// 状态栏高度：自定义导航栏需要用它做顶部留白（H5 端没有状态栏，取 0）
-const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
+import searchInput from '@/components/searchInput.vue'
+import { useJobList, type JobFilters, type JobRow } from '@/utils/useJobList'
 
 // swiper 索引
 const currentSlide = ref(0)
 
 // 岗位筛选参数
-interface JobQuery {
-	jobName: string
-	city: string
-	experienceMin: string
-	experienceMax: string
-	salaryMin: string
-	salaryMax: string
-	keyword: string
-}
-
-const query = reactive<JobQuery>({
+const query = reactive<JobFilters>({
 	jobName: '',
 	city: '',
 	experienceMin: '',
@@ -112,78 +95,19 @@ const query = reactive<JobQuery>({
 })
 
 // 岗位列表
-interface JobRow {
-	id: number
-	job_name: string
-	company: string
-	salary_min: number
-	salary_max: number
-	experience: string
-	skill_tags: string[]
-}
-
-interface JobPositions extends JobRow {
-	isDescription: boolean
-}
-
-
-
-const jobList = ref<JobPositions[]>([])
-
-const jobPagination = reactive({ page: 1, size: 10, total: 0 })
-
-// 是否还有下一页、是否正在请求
-const finished = ref(false)
-const loading = ref(false)
-
-// 获取岗位列表：按当前 jobPagination.page 请求，并把新一页追加到列表后面
-const getJobLists = async () => {
-	if (loading.value || finished.value) return
-	loading.value = true
-	try {
-		const res = await getJobList({
-			page: jobPagination.page,
-			size: jobPagination.size,
-			...query
-		})
-		// 只追加新的一页，保留已加载的数据
-		jobList.value.push(
-			...res.list.map(item => ({
-				...item,
-				// 经验为空时统一显示为「无需经验」
-				experience: item.experience || '无需经验',
-				// 有超长标签就标记为需要看详情
-				isDescription: item.skill_tags.some(tag => tag.length >= 10)
-			}))
-		)
-		jobPagination.total = res.total
-		// 已加载条数达到总数，说明没有更多了
-		if (jobList.value.length >= res.total) finished.value = true
-	} finally {
-		loading.value = false
-	}
-}
-
-// 划到底部时加载下一页
-const loadMore = () => {
-	if (loading.value || finished.value) return
-	jobPagination.page++
-	getJobLists()
-}
+const { list: jobList, refresh, loadMore } = useJobList(() => query)
 
 onReachBottom(loadMore)
 
-// 触发搜索：清空列表并回到第 1 页重新拉取
-const onSearch = () => {
-	jobPagination.page = 1
-	jobPagination.total = 0
-	jobList.value = []
-	finished.value = false
-	getJobLists()
+// 搜索：带上关键词跳到搜索结果页
+const onSearch = (keyword: string) => {
+	uni.navigateTo({
+		url: '/pages/searchList/index?keyword=' + encodeURIComponent(keyword)
+	})
 }
 
 // 点击跳转到详情页
-const toDetail = (item: JobPositions) => {
+const toDetail = (item: JobRow) => {
 	uni.navigateTo({
 		url: '/pages/detail/index?id=' + item.id
 	})
@@ -191,7 +115,7 @@ const toDetail = (item: JobPositions) => {
 
 onMounted(() => {
 	// 首屏加载第 1 页
-	getJobLists()
+	refresh()
 })
 </script>
 
@@ -210,64 +134,12 @@ onMounted(() => {
 	.main {
 		padding: 0 24rpx;
 
-		// ===== 顶部标题栏（自定义导航栏） =====
-		.navbar {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 12rpx 0 20rpx;
-			height: 120rpx;
-
-			// 搜索框：撑满标题栏
-			.search {
-				display: flex;
-				align-items: center;
-				box-sizing: border-box;
-				flex: 1;
-				height: 80rpx;
-				padding: 0 26rpx;
-				background-color: #ffffff;
-				border-radius: 40rpx;
-				box-shadow: 0 4rpx 14rpx rgba(16, 27, 51, 0.06);
-
-				// 放大镜：圆 + 45° 手柄
-				.search-icon {
-					position: relative;
-					flex-shrink: 0;
-					width: 22rpx;
-					height: 22rpx;
-					border: 3rpx solid #9aa0a6;
-					border-radius: 50%;
-
-					&::after {
-						content: '';
-						position: absolute;
-						right: -9rpx;
-						bottom: -7rpx;
-						width: 12rpx;
-						height: 3rpx;
-						background-color: #9aa0a6;
-						border-radius: 3rpx;
-						transform: rotate(45deg);
-					}
-				}
-
-				.search-input {
-					flex: 1;
-					min-width: 0;
-					margin-left: 18rpx;
-					font-size: 28rpx;
-					color: #101b33;
-				}
-			}
-		}
-
 		// ===== 顶部 Hero 渐变卡片 =====
 		.hero {
 			position: relative;
 			width: 100%;
 			height: 288rpx;
-			background-image: linear-gradient(135deg, #2c4e8c 0%, #1e3c72 55%, #152c55 100%);
+			background-image: linear-gradient(135deg, #3468f2 0%, #2350cc 52%, #16318f 100%);
 			border-radius: 31rpx;
 			overflow: hidden;
 
@@ -283,13 +155,13 @@ onMounted(() => {
 				width: 81rpx;
 				height: 81rpx;
 				padding-bottom: 21rpx;
-				background-color: rgba(255, 255, 255, 0.16);
+				background-color: #ffffff;
 				border-radius: 50%;
 
 				.hero-icon-bar {
 					width: 8rpx;
 					margin: 0 3rpx;
-					background-color: #ffffff;
+					background-color: #2350cc;
 					border-radius: 3rpx;
 
 					&--sm {
@@ -325,7 +197,7 @@ onMounted(() => {
 					margin-top: 10rpx;
 					font-size: 22rpx;
 					line-height: 1.2;
-					color: #a9bedd;
+					color: #bccdf5;
 				}
 			}
 
@@ -339,13 +211,13 @@ onMounted(() => {
 				box-sizing: border-box;
 				height: 50rpx;
 				padding: 0 20rpx;
-				background-color: rgba(255, 255, 255, 0.14);
+				background-color: rgba(255, 255, 255, 0.18);
 				border-radius: 25rpx;
 
 				.hero-badge-dot {
 					width: 13rpx;
 					height: 13rpx;
-					background-color: #8fe3c0;
+					background-color: #4ade80;
 					border-radius: 50%;
 				}
 
@@ -353,7 +225,7 @@ onMounted(() => {
 					margin-left: 12rpx;
 					font-size: 21rpx;
 					line-height: 1;
-					color: #d8e4f7;
+					color: #ffffff;
 				}
 			}
 
@@ -366,15 +238,15 @@ onMounted(() => {
 				width: 231rpx;
 				height: 177rpx;
 				padding: 22rpx 22rpx 0;
-				background-color: rgba(255, 255, 255, 0.12);
-				border: 2rpx solid rgba(255, 255, 255, 0.18);
+				background-color: rgba(255, 255, 255, 0.16);
+				border: 2rpx solid rgba(255, 255, 255, 0.28);
 				border-radius: 23rpx;
 
 				.hero-stat-label {
 					display: block;
 					font-size: 18rpx;
 					line-height: 1.2;
-					color: #c3d2ec;
+					color: #ccdaf9;
 				}
 
 				.hero-stat-value {
@@ -386,13 +258,26 @@ onMounted(() => {
 					color: #ffffff;
 				}
 
-				// 迷你趋势图：由 clip-path 裁出折线下方的面积
+				// 迷你趋势图：由 clip-path 裁出折线下方的面积，白色系贴合深蓝底
 				.hero-stat-chart {
+					position: relative;
 					width: 100%;
 					height: 60rpx;
 					margin-top: 8rpx;
-					background-image: linear-gradient(180deg, rgba(143, 227, 192, 0.6) 0%, rgba(143, 227, 192, 0) 100%);
+					background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 100%);
 					clip-path: polygon(0 82%, 16% 68%, 32% 86%, 48% 48%, 64% 60%, 80% 22%, 100% 8%, 100% 100%, 0 100%);
+
+					// 折线本身：用同一组拐点裁出一条白色细带
+					&::after {
+						position: absolute;
+						top: 0;
+						left: 0;
+						width: 100%;
+						height: 100%;
+						background-color: #ffffff;
+						content: '';
+						clip-path: polygon(0 82%, 16% 68%, 32% 86%, 48% 48%, 64% 60%, 80% 22%, 100% 8%, 100% 12%, 80% 26%, 64% 64%, 48% 52%, 32% 90%, 16% 72%, 0 86%);
+					}
 				}
 			}
 		}
@@ -402,6 +287,7 @@ onMounted(() => {
 			display: flex;
 			align-items: center;
 			justify-content: flex-start;
+			margin-top: 16rpx;
 			margin-left: 24rpx;
 			gap: 12rpx;
 
@@ -437,7 +323,7 @@ onMounted(() => {
 				padding: 28rpx;
 				background-color: #ffffff;
 				border-radius: 16rpx;
-				box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.06);
+				box-shadow: 0 8rpx 24rpx rgba(31, 60, 120, 0.08);
 
 				// 主体信息区：整行卡片下与右侧信息区并排，负责占满剩余宽度
 				.card-body {
@@ -483,17 +369,20 @@ onMounted(() => {
 						font-size: 20rpx;
 						line-height: 1.2;
 						color: #9aa0a6;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap;
 					}
 				}
 
-				// 以下为次要信息，统一用浅色系拉开层次
+				// 薪资：蓝色加粗，作为卡片的关键信息
 				.salary {
 					display: block;
 					margin-top: 10rpx;
 					font-size: 26rpx;
-					font-weight: 500;
+					font-weight: bold;
 					line-height: 1.2;
-					color: #5f6368;
+					color: #2e63e8;
 				}
 
 				// 技能标签：只保留一行，超出部分直接裁掉
@@ -514,6 +403,14 @@ onMounted(() => {
 						color: #8a9099;
 						background-color: #f5f6f8;
 						border-radius: 8rpx;
+					}
+
+					// 无技能标签时的“查看详情”：仅蓝色文字，不带底色
+					.tag-link {
+						font-weight: 500;
+						color: #2e63e8;
+						background-color: #eff6ff;
+						border-radius: 40%;
 					}
 				}
 			}
@@ -553,7 +450,7 @@ onMounted(() => {
 					margin-left: 28rpx;
 
 					.card-side-exp {
-						padding: 6rpx 16rpx;
+						padding: 8rpx 22rpx;
 						font-size: 22rpx;
 						line-height: 1.2;
 						color: #2e63e8;

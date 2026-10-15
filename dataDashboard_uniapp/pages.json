@@ -38,6 +38,12 @@
 			"style": {
 				"navigationBarTitleText": "详情"
 			}
+		},
+		{
+			"path": "pages/searchList/index",
+			"style": {
+				"navigationBarTitleText": "搜索结果"
+			}
 		}
 	],
 	"tabBar": {
