@@ -280,7 +280,7 @@ const toAnalyse = () => {
 
 /* ===== 历史会话列表容器 ===== */
 .panel {
-	padding: 24rpx 0 24rpx;
+	padding: 24rpx;
 	background-color: #ffffff;
 	border: 1px solid #f5f5f5;
 	border-radius: 24rpx;

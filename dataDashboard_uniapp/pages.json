@@ -40,6 +40,13 @@
 			}
 		},
 		{
+			"path": "pages/searchInput/index",
+			"style": {
+				"navigationBarTitleText": "搜索",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/searchList/index",
 			"style": {
 				"navigationBarTitleText": "搜索结果"
@@ -47,28 +54,28 @@
 		}
 	],
 	"tabBar": {
-		"color": "#9AA3B2",
-		"selectedColor": "#2E63E8",
+		"color": "#9CA3AF",
+		"selectedColor": "#2563EB",
 		"backgroundColor": "#FFFFFF",
 		"borderStyle": "white",
 		"list": [
 			{
 				"pagePath": "pages/home/index",
 				"text": "首页",
-				"iconPath": "static/icon/home.png",
-				"selectedIconPath": "static/icon/home-active.png"
+				"iconPath": "static/icon/home.svg",
+				"selectedIconPath": "static/icon/home-active.svg"
 			},
 			{
 				"pagePath": "pages/aiAnalyseHome/index",
 				"text": "智能分析",
-				"iconPath": "static/icon/ai.png",
-				"selectedIconPath": "static/icon/ai-active.png"
+				"iconPath": "static/icon/ai.svg",
+				"selectedIconPath": "static/icon/ai-active.svg"
 			},
 			{
 				"pagePath": "pages/user/index",
 				"text": "我的",
-				"iconPath": "static/icon/user.png",
-				"selectedIconPath": "static/icon/user-active.png"
+				"iconPath": "static/icon/user.svg",
+				"selectedIconPath": "static/icon/user-active.svg"
 			}
 		]
 	},

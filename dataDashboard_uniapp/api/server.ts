@@ -26,7 +26,7 @@ export const getJobList = async (params: { page: number; size: number, city: str
 
 // 获取薪资分布数据
 export const getSalaryRange = async () => {
-  return (await http.get<{ salaryRange: string; jobCount: number }[]>('/home/salaryRange')).data
+  return (await http.get<{ salary_range: string; jobCount: number }[]>('/home/salaryRange')).data
 }
 
 // 获取技术栈热度数据

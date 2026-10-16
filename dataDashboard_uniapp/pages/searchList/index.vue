@@ -14,13 +14,139 @@
 			<text @click="onSearch(keyword)" class="search-action">搜索</text>
 		</view>
 
-		<!-- ===== 筛选条件 ===== -->
-		<view class="filters">
-			<view class="chip" :class="{ 'is-active': item.active }" v-for="item in filters" :key="item.id">
-				<text class="chip-text">{{ item.label }}</text>
-				<view class="chip-caret"></view>
+		<!-- ===== 筛选条件：四个独立下拉框 ===== -->
+		<view class="filter-area">
+			<view class="filters">
+				<!-- 城市选择下拉 -->
+				<view class="dropdown">
+					<view class="chip" :class="{ 'is-active': city !== UNLIMITED }"
+						@click="toggleFilter(cityFilter.id)">
+						<text class="chip-text">{{ city === UNLIMITED ? '城市选择' : city }}</text>
+						<view class="chip-caret" :class="{ 'is-open': openId === cityFilter.id }"></view>
+					</view>
+
+					<view class="filter-panel filter-panel--city" v-if="openId === cityFilter.id">
+						<view class="city-hot">
+							<view class="city-hot-header">
+								<text class="city-hot-title">热门城市</text>
+								<text @click="resetCityFilter()" class="city-hot-reset">重置</text>
+							</view>
+							<view class="city-hot-tags">
+								<text class="city-tag" :class="{ 'is-selected': city === item }"
+									v-for="item in cityFilter.hotCities" :key="item" @click="selectCity(item)">{{ item
+									}}</text>
+							</view>
+						</view>
+
+						<view class="city-body">
+							<scroll-view class="city-scroll" scroll-y :scroll-into-view="cityScrollTo">
+								<view class="city-group" v-for="group in cityFilter.cityGroups" :key="group.letter"
+									:id="'city-' + group.letter">
+									<text class="city-group-letter">{{ group.letter }}</text>
+									<view class="city-group-list">
+										<text class="city-item" :class="{ 'is-selected': city === item }"
+											v-for="item in group.cities" :key="item" @click="selectCity(item)">{{ item
+											}}</text>
+									</view>
+								</view>
+							</scroll-view>
+
+							<view class="city-index">
+								<text class="city-index-item" :class="{ 'is-active': letter === activeLetter }"
+									v-for="letter in cityLetters" :key="letter" @click="onCityLetter(letter)">{{ letter
+									}}</text>
+							</view>
+						</view>
+					</view>
+				</view>
+
+				<!-- 经验下拉：面板比 chip 宽得多，所以放在筛选行下（见下方），chip 这里只做触发器 -->
+				<view class="dropdown">
+					<view class="chip" :class="{ 'is-active': experienceActive }"
+						@click="toggleFilter(experienceFilter.id)">
+						<text class="chip-text">{{ experienceText === UNLIMITED ? '经验' : experienceText }}</text>
+						<view class="chip-caret" :class="{ 'is-open': openId === experienceFilter.id }"></view>
+					</view>
+				</view>
+
+				<!-- 薪资下拉：输入最低 / 最高薪资，单位 K -->
+				<view class="dropdown">
+					<view class="chip" :class="{ 'is-active': salaryActive }" @click="toggleFilter(salaryFilter.id)">
+						<text class="chip-text">{{ salaryText === UNLIMITED ? '薪资' : salaryText }}</text>
+						<view class="chip-caret" :class="{ 'is-open': openId === salaryFilter.id }"></view>
+					</view>
+
+					<view class="filter-panel filter-panel--salary" v-if="openId === salaryFilter.id">
+						<view class="panel-header">
+							<text class="panel-title">{{ salaryFilter.label }}</text>
+						</view>
+
+						<view class="salary-inputs">
+							<input class="salary-input" type="number" v-model="salaryMin" placeholder="最低"
+								placeholder-class="salary-placeholder" />
+							<text class="salary-separator">-</text>
+							<input class="salary-input" type="number" v-model="salaryMax" placeholder="最高"
+								placeholder-class="salary-placeholder" />
+							<text class="salary-unit">K</text>
+						</view>
+
+						<view class="panel-actions">
+							<button class="panel-btn" @click="resetSalaryFilter()">重置</button>
+							<button class="panel-btn panel-btn--primary" @click="confirmFilter()">确认</button>
+						</view>
+					</view>
+				</view>
+
+				<!-- 学历下拉: 暂无筛选条件 -->
+				<view class="dropdown">
+					<view class="chip" :class="{ 'is-active': educationFilter.selected !== UNLIMITED }"
+						@click="toggleFilter(educationFilter.id)">
+						<text class="chip-text">{{ educationFilter.selected === UNLIMITED ? '学历' :
+							educationFilter.selected }}</text>
+						<view class="chip-caret" :class="{ 'is-open': openId === educationFilter.id }"></view>
+					</view>
+
+					<view class="filter-panel filter-panel--education" v-if="openId === educationFilter.id">
+						<view class="filter-option" :class="{ 'is-selected': option === educationFilter.selected }"
+							v-for="option in educationFilter.options" :key="option"
+							@click="selectOption(educationFilter, option)">
+							<text class="filter-option-text">{{ option }}</text>
+						</view>
+					</view>
+				</view>
+			</view>
+
+			<!-- 经验面板：双滑块选年限范围，锚在筛选行左侧，宽度不受窄 chip 限制 -->
+			<view class="filter-panel filter-panel--range" v-if="openId === experienceFilter.id">
+				<view class="panel-header">
+					<text class="panel-title">{{ experienceFilter.label }}</text>
+				</view>
+
+				<!-- 轨道：拖动两个把手圈出年限区间，10 表示「10 年以上」 -->
+				<view id="experience-track" class="range-track" @touchstart="onRangeStart"
+					@touchmove.stop.prevent="onRangeMove">
+					<view class="range-fill" :style="{
+						left: percentOf(experienceMin),
+						width: percentOf(experienceMax - experienceMin)
+					}"></view>
+					<view class="range-thumb" :style="{ left: percentOf(experienceMin) }"></view>
+					<view class="range-thumb" :style="{ left: percentOf(experienceMax) }"></view>
+				</view>
+
+				<view class="range-scale">
+					<text class="range-scale-text">0 年</text>
+					<text class="range-scale-text">{{ EXPERIENCE_MAX }} 年以上</text>
+				</view>
+
+				<view class="panel-actions">
+					<button class="panel-btn" @click="resetExperienceFilter()">重置</button>
+					<button class="panel-btn panel-btn--primary" @click="confirmFilter()">确认</button>
+				</view>
 			</view>
 		</view>
+
+		<!-- 筛选展开时的遮罩：点空白处收起 -->
+		<view class="filter-mask" v-if="openId !== null" @click="openId = null"></view>
 
 		<!-- ===== 结果数量 ===== -->
 		<view class="result-count">
@@ -63,10 +189,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { onLoad, onReachBottom } from '@dcloudio/uni-app'
-import searchInput from '@/components/searchInput.vue'
 import { useJobList } from '@/utils/useJobList'
+import { getCityListAsync } from '@/api/searchList'
+import { cityInitials, cityShortNames } from '@/utils/cityInitials'
 
 // 状态栏高度：自定义导航栏用它做顶部留白（H5 端没有状态栏，取 12px 保底）
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
@@ -74,14 +201,29 @@ const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
 // 首页通过 URL 参数传来的搜索关键词
 const keyword = ref('')
 
-// 搜索浮层组件：点顶部搜索框时展开它
-const searchInputRef = ref<{ open: () => void } | null>(null)
+/** 城市分组：letter 为首字母 */
+interface CityGroup {
+	letter: string
+	cities: string[]
+}
 
-/** 筛选项：active 表示已选中的深色态 */
-interface FilterChip {
+/** 城市选择：顶部推荐城市 + 其余城市按首字母分组 */
+interface CityFilter {
 	id: number
 	label: string
-	active: boolean
+	type: 'city'
+	selected: string
+	hotCities: string[]
+	cityGroups: CityGroup[]
+}
+
+/** 胶囊选项筛选：学历 */
+interface OptionFilter {
+	id: number
+	label: string
+	type: 'education'
+	selected: string
+	options: string[]
 }
 
 /** 岗位卡片 */
@@ -97,34 +239,262 @@ interface JobCard {
 	isDescription: boolean
 }
 
-// 静态数据：筛选项
-const filters: FilterChip[] = [
-	{ id: 1, label: '城市选择', active: false },
-	{ id: 2, label: '经验', active: false },
-	{ id: 3, label: '薪资', active: false },
-	{ id: 4, label: '学历', active: false }
-]
+// 「不限」视为未筛选：选中它时 chip 不显示深色态
+const UNLIMITED = '不限'
+
+// ===== 筛选值：变量名与 /home/jobList 的参数一致，直接透传给接口 =====
+// 城市：接口要「市」前面的短名，'不限' 表示不筛选
+const city = ref(UNLIMITED)
+// 经验年限区间：0 ~ EXPERIENCE_MAX，取到 EXPERIENCE_MAX 表示「10 年以上」
+const EXPERIENCE_MAX = 10
+const experienceMin = ref(0)
+const experienceMax = ref(EXPERIENCE_MAX)
+// 薪资区间：单位 K，空串表示该端不限
+const salaryMin = ref('')
+const salaryMax = ref('')
+
+// 城市下拉：热门城市写死，其余城市由接口数据按首字母分组
+const cityFilter = reactive<CityFilter>({
+	id: 1,
+	label: '城市选择',
+	type: 'city',
+	selected: UNLIMITED,
+	hotCities: ['北京', '上海', '深圳', '广州', '杭州', '成都', '武汉', '南京'],
+	// 分组数据在 getCities 里由接口填充
+	cityGroups: []
+})
+
+// 展示用城市名：自治州 / 地区 / 盟 查简称表，其余去掉结尾的「市」
+const cityLabel = (name: string) => cityShortNames[name] ?? name.replace(/市$/, '')
+// 获取城市列表
+const getCities = async () => {
+	const cities = await getCityListAsync()
+	const grouped = new Map<string, string[]>()
+
+	cities
+		// 过滤掉「河南省-省直辖县级行政区划」这类省级占位行，它们不是可选城市
+		.filter(({ name }) => !name.includes('-'))
+		.forEach(({ name }) => {
+			const letter = cityInitials[name] ?? '#'
+			const group = grouped.get(letter) ?? []
+			group.push(cityLabel(name))
+			grouped.set(letter, group)
+		})
+
+	cityFilter.cityGroups = [...grouped]
+		.map(([letter, list]) => ({ letter, cities: list }))
+		.sort((a, b) => a.letter.localeCompare(b.letter))
+}
+// 选中城市：直接用短名，接口要的就是这个；选中后立即重新查询
+const selectCity = (value: string) => {
+	city.value = value
+	getList()
+}
+// 重置城市筛选
+const resetCityFilter = () => {
+	city.value = UNLIMITED
+	getList()
+}
+
+// 经验下拉：双滑块选年限范围，默认全范围（即不限）
+interface ExperienceFilter {
+	id: number
+	label: string
+	type: 'experience'
+}
+const experienceFilter = reactive<ExperienceFilter>({
+	id: 2,
+	label: '经验',
+	type: 'experience'
+})
+
+// chip 上的范围文案：全范围显示「不限」
+const experienceText = computed(() => {
+	const min = experienceMin.value
+	const max = experienceMax.value
+	if (min === 0 && max === EXPERIENCE_MAX) return UNLIMITED
+	if (min === max) return `${min} 年`
+	return max === EXPERIENCE_MAX ? `${min} 年以上` : `${min}-${max} 年`
+})
+
+// 是否已筛选：拖到两端视为未筛选
+const experienceActive = computed(() => experienceMin.value > 0 || experienceMax.value < EXPERIENCE_MAX)
+
+// 年限换算成百分比：给把手和选中段定位用
+const percentOf = (year: number) => `${(year / EXPERIENCE_MAX) * 100}%`
+
+// 轨道的位置与宽度：展开面板后量一次，用于把触摸坐标换算成年限
+interface RangeTrack {
+	left: number
+	width: number
+}
+const rangeTrack = ref<RangeTrack>({ left: 0, width: 0 })
+
+// 当前拖动的把手
+const draggingThumb = ref<'min' | 'max'>('min')
+
+// 面板是 v-if 渲染的，展开后再量轨道
+// 当前展开的下拉框 id：默认展开城市，方便先看静态设计
+const openId = ref<number | null>(null)
+watch(openId, () => {
+	nextTick(() => {
+		uni.createSelectorQuery()
+			.select('#experience-track')
+			.boundingClientRect((rect) => {
+				// 单节点查询也可能返回数组，这里只取单个节点的结果
+				if (!rect || Array.isArray(rect)) return
+				rangeTrack.value = { left: rect.left ?? 0, width: rect.width ?? 0 }
+			})
+			.exec()
+	})
+})
+
+// 触摸位置 → 年限刻度
+const yearFromTouch = (event: TouchEvent) => {
+	const { left, width } = rangeTrack.value
+	if (!width) return experienceMin.value
+	const ratio = (event.touches[0].clientX - left) / width
+	return Math.min(EXPERIENCE_MAX, Math.max(0, Math.round(ratio * EXPERIENCE_MAX)))
+}
+
+// 按下：离触点更近的那个把手跟随手指
+const onRangeStart = (event: TouchEvent) => {
+	const year = yearFromTouch(event)
+	draggingThumb.value =
+		Math.abs(year - experienceMin.value) <= Math.abs(year - experienceMax.value) ? 'min' : 'max'
+	moveThumb(year)
+}
+
+// 拖动：把手跟手，且两个把手不允许交叉
+const onRangeMove = (event: TouchEvent) => moveThumb(yearFromTouch(event))
+
+const moveThumb = (year: number) => {
+	if (draggingThumb.value === 'min') {
+		experienceMin.value = Math.min(year, experienceMax.value)
+	} else {
+		experienceMax.value = Math.max(year, experienceMin.value)
+	}
+}
+
+// 重置经验筛选
+const resetExperienceFilter = () => {
+	experienceMin.value = 0
+	experienceMax.value = EXPERIENCE_MAX
+}
+
+// 确认：收起键盘和面板，并按最新筛选条件重新查询
+const confirmFilter = () => {
+	uni.hideKeyboard()
+	openId.value = null
+	getList()
+}
+
+// 薪资下拉：两个数字输入框，单位 K
+interface SalaryFilter {
+	id: number
+	label: string
+	type: 'salary'
+}
+const salaryFilter = reactive<SalaryFilter>({
+	id: 3,
+	label: '薪资',
+	type: 'salary'
+})
+
+// chip 上的薪资文案：两端都空显示「不限」
+const salaryText = computed(() => {
+	const min = salaryMin.value
+	const max = salaryMax.value
+	if (!min && !max) return UNLIMITED
+	if (min && max) return `${min}-${max}K`
+	return min ? `${min}K 以上` : `${max}K 以下`
+})
+
+// 是否已筛选：任一端填了数字就算
+const salaryActive = computed(() => !!salaryMin.value || !!salaryMax.value)
+
+// 重置薪资筛选
+const resetSalaryFilter = () => {
+	salaryMin.value = ''
+	salaryMax.value = ''
+}
+
+// 学历下拉
+const educationFilter = reactive<OptionFilter>({
+	id: 4,
+	label: '学历',
+	type: 'education',
+	selected: UNLIMITED,
+	options: [UNLIMITED, '大专', '本科', '硕士', '博士']
+})
+
+
+
+// 点 chip：展开对应下拉面板，再点同一个则收起
+const toggleFilter = (id: number) => {
+	openId.value = openId.value === id ? null : id
+}
+
+// 选中学历选项：只改本地状态，不触发查询
+const selectOption = (filter: OptionFilter, option: string) => {
+	filter.selected = option
+}
+
+// 城市面板右侧字母索引：取城市下拉的分组首字母
+const cityLetters = computed(() => cityFilter.cityGroups.map((group) => group.letter))
+
+// 待滚动的分组 id、当前高亮的字母
+const cityScrollTo = ref('')
+const activeLetter = ref('')
+
+// 点字母：滚动到对应分组并高亮（先清空再赋值，连点同一个字母也能重新定位）
+const onCityLetter = (letter: string) => {
+	cityScrollTo.value = ''
+	nextTick(() => {
+		cityScrollTo.value = `city-${letter}`
+		activeLetter.value = letter
+	})
+}
 
 // 静态数据：岗位列表
 const jobList = ref<JobCard[]>([])
 
 // 获取岗位，整理数据
-const { list, pagination, finished, refresh, loadMore } = useJobList(() => ({ keyword: keyword.value }))
+// 筛选值的变量名与接口参数一致，直接透传；「不限」转成空串表示不筛选
+const { list, pagination, finished, refresh, loadMore } = useJobList(() => ({
+	// 关键词同时作为岗位名条件
+	keyword: keyword.value,
+	jobName: keyword.value,
+	city: city.value === UNLIMITED ? '' : city.value,
+	experienceMin: String(experienceMin.value),
+	experienceMax: String(experienceMax.value),
+	salaryMin: salaryMin.value,
+	salaryMax: salaryMax.value
+}))
 const getList = async () => {
 	await refresh()
-	console.log("获取岗位，整理数据", list.value)
+	// console.log("获取岗位，整理数据", list.value)
 	jobList.value = list.value
 }
 
 onLoad((options) => {
+	// 根据关键词获取岗位列表
 	keyword.value = decodeURIComponent(options?.keyword ?? '')
 	jobList.value = []
 	getList()
+
+	// 获取城市列表
+	getCities()
 })
 
-// 返回上一页
+// 返回搜索页（首页）
+// 有上一页直接返回；用 URL 直接打开本页时无上一页，兜底切换回首页 tab
 const onBack = () => {
-	uni.navigateBack()
+	if (getCurrentPages().length > 1) {
+		uni.navigateBack()
+	} else {
+		uni.switchTab({ url: '/pages/home/index' })
+	}
 }
 
 // 浮层里点了搜索：换关键词后在本页重新查询
@@ -151,6 +521,12 @@ onReachBottom(() => {
 	color: #9aa0a6;
 }
 
+/* 薪资输入框占位符：同上 */
+.salary-placeholder {
+	font-size: 26rpx;
+	color: #9aa0a6;
+}
+
 .search-list {
 	box-sizing: border-box;
 	min-height: 100vh;
@@ -160,6 +536,9 @@ onReachBottom(() => {
 
 	/* ===== 顶部：返回 + 搜索框 ===== */
 	.top-bar {
+		/* 提升层级：展开筛选面板时不被遮罩压暗 */
+		position: relative;
+		z-index: 12;
 		display: flex;
 		align-items: center;
 		margin-top: 24rpx;
@@ -253,53 +632,406 @@ onReachBottom(() => {
 	}
 
 	/* ===== 筛选条件 ===== */
-	.filters {
-		display: flex;
-		justify-content: space-around;
-		gap: 16rpx;
+	/* 包裹层：让下拉面板相对筛选行定位，并保证整体在遮罩之上 */
+	.filter-area {
+		position: relative;
+		z-index: 12;
 		margin-top: 24rpx;
 
-		.chip {
+		.filters {
 			display: flex;
-			align-items: center;
-			justify-content: center;
-			box-sizing: border-box;
-			height: 60rpx;
-			padding: 0 28rpx;
-			background-color: #f5f5f5;
-			border-radius: 999rpx;
+			justify-content: space-around;
+			gap: 16rpx;
 
-			.chip-text {
-				font-size: 26rpx;
-				font-weight: 700;
-				line-height: 1;
-				color: #525252;
+			/* 每个下拉框：作为自身面板的定位容器 */
+			.dropdown {
+				position: relative;
+				display: flex;
 			}
 
-			/* 下拉箭头：旋转 45° 的直角边框 */
-			.chip-caret {
-				width: 12rpx;
-				height: 12rpx;
-				margin-left: 12rpx;
-				margin-bottom: 5rpx;
-				border-right: 3rpx solid #525252;
-				border-bottom: 3rpx solid #525252;
-				transform: rotate(45deg);
-			}
-
-			/* 已选中：深色底 + 白字 */
-			&.is-active {
-				background-color: #0a0a0a;
+			.chip {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				box-sizing: border-box;
+				height: 60rpx;
+				padding: 0 28rpx;
+				background-color: #f5f5f5;
+				border-radius: 999rpx;
 
 				.chip-text {
-					color: #ffffff;
+					font-size: 26rpx;
+					font-weight: 700;
+					line-height: 1;
+					color: #525252;
 				}
 
+				/* 下拉箭头：旋转 45° 的直角边框 */
 				.chip-caret {
-					border-color: #ffffff;
+					width: 12rpx;
+					height: 12rpx;
+					margin-left: 12rpx;
+					margin-bottom: 5rpx;
+					border-right: 3rpx solid #525252;
+					border-bottom: 3rpx solid #525252;
+					transform: rotate(45deg);
+
+					/* 面板展开时箭头翻转为朝上 */
+					&.is-open {
+						margin-top: 5rpx;
+						margin-bottom: 0;
+						transform: rotate(-135deg);
+					}
+				}
+
+				/* 已选中：深色底 + 白字 */
+				&.is-active {
+					background-color: #0a0a0a;
+
+					.chip-text {
+						color: #ffffff;
+					}
+
+					.chip-caret {
+						border-color: #ffffff;
+					}
 				}
 			}
 		}
+
+		/* 下拉面板：绝对定位于各自触发器下方，不挤动列表 */
+		.filter-panel {
+			position: absolute;
+			top: 100%;
+			/* 默认水平居中于自己的 chip */
+			left: 50%;
+			width: 400rpx;
+			transform: translateX(-50%);
+			display: flex;
+			flex-wrap: wrap;
+			gap: 16rpx;
+			box-sizing: border-box;
+			margin-top: 16rpx;
+			padding: 24rpx;
+			background-color: #ffffff;
+			border-radius: 24rpx;
+			box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.12);
+
+			/* 选项：等分三列的胶囊 */
+			.filter-option {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				box-sizing: border-box;
+				width: calc((100% - 32rpx) / 3);
+				height: 64rpx;
+				padding: 0 8rpx;
+				background-color: #f5f5f5;
+				border-radius: 12rpx;
+
+				.filter-option-text {
+					font-size: 26rpx;
+					line-height: 1;
+					color: #525252;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+
+				/* 选中态与 chip 保持一致 */
+				&.is-selected {
+					background-color: #0a0a0a;
+
+					.filter-option-text {
+						font-weight: 700;
+						color: #ffffff;
+					}
+				}
+			}
+		}
+
+		/* 宽面板（城市 / 经验）：左对齐，宽度和筛选行接近，居中会因为 chip 偏左而出屏 */
+		.filter-panel--city,
+		.filter-panel--range {
+			left: 0;
+			width: 620rpx;
+			transform: none;
+		}
+
+		/* 城市面板：热门城市 + 字母分组的城市列表 */
+		.filter-panel--city {
+			display: block;
+
+			.city-hot {
+
+				.city-hot-header {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+				}
+
+				.city-hot-title,
+				.city-hot-reset {
+					font-size: 24rpx;
+					line-height: 1;
+					color: #a3a3a3;
+				}
+
+				/* 推荐城市：一行可放多个，超出自动换行 */
+				.city-hot-tags {
+					display: flex;
+					flex-wrap: wrap;
+					gap: 16rpx;
+					margin-top: 16rpx;
+				}
+
+				.city-tag {
+					padding: 12rpx 28rpx;
+					font-size: 26rpx;
+					line-height: 1;
+					color: #525252;
+					background-color: #f5f5f5;
+					border-radius: 999rpx;
+
+					&.is-selected {
+						font-weight: 700;
+						color: #ffffff;
+						background-color: #0a0a0a;
+					}
+				}
+			}
+
+			/* 全部城市：左侧列表限高滚动，右侧字母索引固定 */
+			.city-body {
+				display: flex;
+				height: 560rpx;
+				margin-top: 24rpx;
+			}
+
+			.city-scroll {
+				flex: 1;
+				min-width: 0;
+				height: 100%;
+			}
+
+			.city-group {
+				margin-bottom: 16rpx;
+
+				.city-group-letter {
+					display: block;
+					font-size: 24rpx;
+					line-height: 1.6;
+					color: #a3a3a3;
+				}
+
+				.city-group-list {
+					display: flex;
+					flex-wrap: wrap;
+					gap: 12rpx;
+				}
+			}
+
+			/* 城市胶囊：一行三个 */
+			.city-item {
+				box-sizing: border-box;
+				width: calc((100% - 24rpx) / 3);
+				padding: 14rpx 4rpx;
+				font-size: 26rpx;
+				line-height: 1;
+				text-align: center;
+				color: #525252;
+				background-color: #f5f5f5;
+				border-radius: 12rpx;
+
+				&.is-selected {
+					font-weight: 700;
+					color: #ffffff;
+					background-color: #0a0a0a;
+				}
+			}
+
+			/* 右侧字母索引：等分撑满滚动区高度 */
+			.city-index {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: space-between;
+				flex-shrink: 0;
+				width: 40rpx;
+				padding-left: 8rpx;
+
+				.city-index-item {
+					font-size: 20rpx;
+					line-height: 1;
+					color: #a3a3a3;
+
+					&.is-active {
+						font-weight: 700;
+						color: #2563eb;
+					}
+				}
+			}
+		}
+
+		/* 学历面板：位于筛选行最右侧，右对齐避免超出屏幕 */
+		.filter-panel--education {
+			left: auto;
+			right: 0;
+			transform: none;
+		}
+
+		/* 面板标题行：经验 / 薪资面板共用 */
+		.panel-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+
+			.panel-title {
+				font-size: 24rpx;
+				line-height: 1;
+				color: #a3a3a3;
+			}
+		}
+
+		/* 底部操作：重置 + 确认两个等宽胶囊按钮，经验 / 薪资面板共用 */
+		.panel-actions {
+			display: flex;
+			gap: 20rpx;
+			margin-top: 40rpx;
+
+			/* 覆盖 uni button 的默认边框与背景 */
+			.panel-btn {
+				flex: 1;
+				height: 68rpx;
+				padding: 0;
+				font-size: 26rpx;
+				font-weight: 700;
+				line-height: 68rpx;
+				color: #525252;
+				background-color: #f5f5f5;
+				border: none;
+				border-radius: 999rpx;
+
+				&::after {
+					border: none;
+				}
+
+				&--primary {
+					color: #ffffff;
+					background-color: #2e63e8;
+				}
+			}
+		}
+
+		/* 经验面板：标题 + 双滑块轨道 + 两端刻度 + 底部操作按钮 */
+		.filter-panel--range {
+			display: block;
+			padding: 32rpx;
+
+			/* 轨道：上下留白撑出触摸区域，中线画未选中部分 */
+			.range-track {
+				position: relative;
+				height: 80rpx;
+				margin-top: 24rpx;
+
+				&::before {
+					position: absolute;
+					top: 50%;
+					right: 0;
+					left: 0;
+					height: 8rpx;
+					margin-top: -4rpx;
+					background-color: #f5f5f5;
+					border-radius: 4rpx;
+					content: '';
+				}
+
+				/* 已选中的年限区间 */
+				.range-fill {
+					position: absolute;
+					top: 50%;
+					height: 8rpx;
+					margin-top: -4rpx;
+					background-color: #2e63e8;
+					border-radius: 4rpx;
+				}
+
+				/* 把手：left 是百分比刻度，左移自身半径让圆心正好落在刻度上 */
+				.range-thumb {
+					position: absolute;
+					top: 50%;
+					box-sizing: border-box;
+					width: 40rpx;
+					height: 40rpx;
+					margin: -20rpx 0 0 -20rpx;
+					background-color: #ffffff;
+					border: 4rpx solid #2e63e8;
+					border-radius: 50%;
+					box-shadow: 0 2rpx 8rpx rgba(46, 99, 232, 0.3);
+				}
+			}
+
+			.range-scale {
+				display: flex;
+				justify-content: space-between;
+				margin-top: 8rpx;
+
+				.range-scale-text {
+					font-size: 22rpx;
+					line-height: 1;
+					color: #a3a3a3;
+				}
+			}
+		}
+
+		/* 薪资面板：标题 + 最低 / 最高两个数字输入框 + 单位 */
+		.filter-panel--salary {
+			display: block;
+
+			.salary-inputs {
+				display: flex;
+				align-items: center;
+				margin-top: 24rpx;
+
+				.salary-input {
+					flex: 1;
+					box-sizing: border-box;
+					height: 68rpx;
+					padding: 0 16rpx;
+					font-size: 26rpx;
+					line-height: 68rpx;
+					text-align: center;
+					color: #0a0a0a;
+					background-color: #f5f5f5;
+					border-radius: 12rpx;
+				}
+
+				.salary-separator {
+					margin: 0 16rpx;
+					font-size: 26rpx;
+					line-height: 1;
+					color: #a3a3a3;
+				}
+
+				.salary-unit {
+					margin-left: 16rpx;
+					font-size: 26rpx;
+					line-height: 1;
+					color: #a3a3a3;
+				}
+			}
+		}
+	}
+
+	/* 展开筛选时的遮罩：压暗下方内容，点空白处收起 */
+	.filter-mask {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 11;
+		background-color: rgba(0, 0, 0, 0.25);
 	}
 
 	/* ===== 结果数量 ===== */
