@@ -1,5 +1,5 @@
 <template>
-	<view class="analyse-home" :style="{ paddingTop: statusBarHeight + 'px' }">
+	<view class="analyse-home">
 		<!-- ===== 顶部标题 + 新建按钮 ===== -->
 		<view class="header">
 			<text class="header-title">AI 分析</text>
@@ -156,7 +156,7 @@ const toAnalyse = () => {
 .analyse-home {
 	box-sizing: border-box;
 	min-height: 100vh;
-	padding: 0 40rpx 40rpx;
+	padding: 36rpx 40rpx 40rpx;
 	background-color: #ffffff;
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

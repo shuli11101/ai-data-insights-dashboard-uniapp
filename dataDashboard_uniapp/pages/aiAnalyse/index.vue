@@ -93,7 +93,7 @@ const onBack = () => {
 	display: flex;
 	flex-direction: column;
 	min-height: 100vh;
-	padding: 0 31rpx 40rpx;
+	padding: 36rpx 31rpx 40rpx;
 	background-color: #f4f4f4;
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 

@@ -12,9 +12,184 @@
 		<title></title>
 		<!--preload-links-->
 		<!--app-context-->
+		<style>
+			/* ===== H5 启动页：纯静态，Vue 挂载后淡出移除 ===== */
+			#splash {
+				position: fixed;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				z-index: 9999;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				background-color: #ffffff;
+				font-family: Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+				transition: opacity 0.3s ease;
+			}
+
+			#splash.is-hidden {
+				opacity: 0;
+				pointer-events: none;
+			}
+
+			/* 品牌图标：黑色圆角方块 + 三根白色柱体，与首页 Hero 图标一致 */
+			#splash .splash-logo {
+				display: flex;
+				align-items: flex-end;
+				justify-content: center;
+				box-sizing: border-box;
+				width: 84px;
+				height: 84px;
+				padding-bottom: 20px;
+				background-color: #0a0a0a;
+				border-radius: 24px;
+				box-shadow: 0 12px 30px rgba(10, 10, 10, 0.18);
+				animation: splash-logo-in 0.5s ease both;
+			}
+
+			#splash .splash-bar {
+				width: 7px;
+				margin: 0 3.5px;
+				background-color: #ffffff;
+				border-radius: 4px;
+			}
+
+			#splash .splash-bar--sm {
+				height: 14px;
+			}
+
+			#splash .splash-bar--md {
+				height: 23px;
+			}
+
+			#splash .splash-bar--lg {
+				height: 32px;
+			}
+
+			#splash .splash-title {
+				margin-top: 22px;
+				font-size: 26px;
+				font-weight: 700;
+				line-height: 1.1;
+				letter-spacing: 0.3px;
+				color: #0a0a0a;
+			}
+
+			#splash .splash-subtitle {
+				margin-top: 8px;
+				font-size: 12px;
+				line-height: 1.2;
+				letter-spacing: 0.2px;
+				color: #9ca3af;
+			}
+
+			/* 加载指示：三点呼吸，保持黑灰极简 */
+			#splash .splash-dots {
+				display: flex;
+				align-items: center;
+				margin-top: 34px;
+			}
+
+			#splash .splash-dot {
+				width: 5px;
+				height: 5px;
+				margin: 0 4px;
+				background-color: #0a0a0a;
+				border-radius: 50%;
+				animation: splash-dot 1.2s ease-in-out infinite;
+			}
+
+			#splash .splash-dot:nth-child(2) {
+				animation-delay: 0.15s;
+			}
+
+			#splash .splash-dot:nth-child(3) {
+				animation-delay: 0.3s;
+			}
+
+			@keyframes splash-logo-in {
+				from {
+					opacity: 0;
+					transform: scale(0.94);
+				}
+
+				to {
+					opacity: 1;
+					transform: scale(1);
+				}
+			}
+
+			@keyframes splash-dot {
+
+				0%,
+				100% {
+					opacity: 0.25;
+				}
+
+				50% {
+					opacity: 1;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				#splash .splash-logo,
+				#splash .splash-dot {
+					animation: none;
+				}
+			}
+		</style>
 	</head>
 	<body>
 		<div id="app"><!--app-html--></div>
+
+		<!-- 启动页：首屏渲染前显示，挂载完成后淡出 -->
+		<div id="splash">
+			<div class="splash-logo">
+				<div class="splash-bar splash-bar--sm"></div>
+				<div class="splash-bar splash-bar--md"></div>
+				<div class="splash-bar splash-bar--lg"></div>
+			</div>
+			<div class="splash-title">JobVision</div>
+			<div class="splash-subtitle">大数据招聘岗位分析平台</div>
+			<div class="splash-dots">
+				<div class="splash-dot"></div>
+				<div class="splash-dot"></div>
+				<div class="splash-dot"></div>
+			</div>
+		</div>
+
 		<script type="module" src="/main.ts"></script>
+		<script>
+			// 监听 #app 挂载完成，淡出并移除启动页；3 秒兜底避免异常时一直遮挡
+			(function () {
+				var splash = document.getElementById('splash')
+				var app = document.getElementById('app')
+				var hidden = false
+
+				function hide() {
+					if (hidden || !splash) return
+					hidden = true
+					splash.className = 'is-hidden'
+					setTimeout(function () {
+						if (splash.parentNode) splash.parentNode.removeChild(splash)
+					}, 350)
+				}
+
+				if (app && window.MutationObserver) {
+					var observer = new MutationObserver(function () {
+						if (app.children.length) {
+							observer.disconnect()
+							hide()
+						}
+					})
+					observer.observe(app, { childList: true })
+				}
+
+				setTimeout(hide, 3000)
+			})()
+		</script>
 	</body>
 </html>

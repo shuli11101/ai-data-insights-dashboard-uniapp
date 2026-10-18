@@ -14,4 +14,9 @@ export default {
 
 <style>
 /*每个页面公共css */
+page,
+uni-page-body {
+	box-sizing: border-box;
+	background-color: #ffffff;
+}
 </style>

@@ -12,41 +12,26 @@
 
 		<view class="content">
 			<!-- ===== 岗位标题 / 薪资 / 基本信息 ===== -->
-			<text class="job-title">前端开发工程师</text>
-			<text class="job-salary">25-45K·14薪</text>
-			<text class="job-meta">杭州 · 西湖区 · 3-5年 · 本科 · 全职</text>
+			<text class="job-title">{{ jobDetail.job_name }}</text>
+			<text class="job-salary">{{ jobDetail.salaryMin }}-{{ jobDetail.salaryMax }}K·{{ jobDetail.experience
+			}}</text>
+			<text class="job-meta">{{ jobDetail.city }} · {{ jobDetail.district }}</text>
 
 			<!-- ===== 公司信息 ===== -->
 			<view class="company-card">
 				<view class="company-logo">
-					<text class="company-logo-text">字</text>
+					<text class="company-logo-text">{{ jobDetail.company?.slice(0, 1) }}</text>
 				</view>
 				<view class="company-info">
-					<text class="company-name">字节跳动</text>
-					<text class="company-desc">已上市 · 移动互联网 · 10000人以上</text>
+					<text class="company-name">{{ jobDetail.company }}</text>
+					<text class="company-desc">(公司情况)</text>
 				</view>
 				<view class="arrow"></view>
 			</view>
 
-			<!-- ===== AI 匹配分析 ===== -->
-			<view class="ai-card">
-				<view class="ai-left">
-					<view class="ai-head">
-						<image class="ai-star" src="/static/icon/detail/detail-ai-white.svg" mode="aspectFit" />
-						<text class="ai-title">AI 匹配分析</text>
-					</view>
-					<text class="ai-line ai-good">核心优势：React 生态、工程化经验</text>
-					<text class="ai-line ai-weak">待提升：大型团队协作项目背书</text>
-				</view>
-				<!-- 匹配度进度环：conic-gradient 画白色圆弧，中间用黑底盖出环形 -->
-				<view class="ai-ring">
-					<text class="ai-ring-text">86%</text>
-				</view>
-			</view>
-
 			<!-- ===== 技能标签 ===== -->
 			<view class="tags">
-				<text class="tag" v-for="skill in skills" :key="skill">{{ skill }}</text>
+				<text class="tag" v-for="skill in jobDetail.skill_tags" :key="skill">{{ skill }}</text>
 			</view>
 
 			<!-- ===== 职位描述 ===== -->
@@ -61,7 +46,7 @@
 			<!-- ===== 任职要求 ===== -->
 			<text class="section-title">任职要求</text>
 			<view class="jd-list">
-				<view class="jd-item" v-for="(text, index) in jobRequire" :key="index">
+				<view class="jd-item" v-for="(text, index) in jobDetail.skill_tags" :key="index">
 					<text class="jd-index">{{ index + 1 }}.</text>
 					<text class="jd-text">{{ text }}</text>
 				</view>
@@ -72,8 +57,8 @@
 			<view class="address-card">
 				<image class="address-pin" src="/static/icon/detail/detail-pin.svg" mode="aspectFit" />
 				<view class="address-info">
-					<text class="address-name">杭州市西湖区文一西路 588 号</text>
-					<text class="address-desc">西溪首座 B 座 · 距地铁 5 号线浙大紫金港站 500m</text>
+					<text class="address-name">{{ jobDetail.company }}</text>
+					<text class="address-desc">(暂无详细数据)</text>
 				</view>
 				<view class="arrow"></view>
 			</view>
@@ -81,39 +66,57 @@
 
 		<!-- ===== 底部操作栏 ===== -->
 		<view class="bottom-bar">
-			<view class="btn btn-ai">
+			<view @click="navigateToAI" class="btn btn-ai">
 				<image class="btn-ai-star" src="/static/icon/detail/detail-ai-black.svg" mode="aspectFit" />
 				<text class="btn-text">AI 分析匹配度</text>
 			</view>
 			<view class="btn btn-chat">
-				<text class="btn-text btn-text-light">立即沟通</text>
+				<text class="btn-text btn-text-light">JD 岗位描述</text>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { getJobDetail, type JobDetail } from '@/api/server'
+import { onLoad } from '@dcloudio/uni-app'
 // 状态栏高度：自定义导航栏用它做顶部留白（H5 端没有状态栏，取 12px 保底）
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
 
 // 静态数据：技能标签
-const skills = ['React', 'TypeScript', 'Node.js', 'Vite', '+3']
+const skills = ["(暂无数据)"]
 
 // 静态数据：职位描述
 const jobDesc = [
-	'负责核心 C 端产品的前端架构设计与开发，保障高并发场景下的体验与性能；',
-	'参与前端工程化体系建设，推动组件库、监控与 CI/CD 落地；',
-	'与产品、设计、后端协作，主导技术方案选型并推动落地；',
-	'关注前沿技术，持续优化研发效率与用户体验。'
+	'暂无数据'
 ]
 
-// 静态数据：任职要求
-const jobRequire = [
-	'本科及以上学历，3-5 年前端开发经验，计算机相关专业优先；',
-	'精通 React 及 TypeScript，熟悉 Node.js 全栈开发者优先；',
-	'熟悉前端工程化，有大型项目性能优化经验；',
-	'具备良好的沟通协作能力与 owner 意识。'
-]
+
+// 获取岗位详情
+const jobDetail = ref({} as JobDetail)
+const getJob = async (id: number) => {
+	try {
+		const res = await getJobDetail(id)
+		console.log(res)
+		jobDetail.value = res
+	} catch (error) {
+		console.log(error)
+	}
+}
+
+// 跳转 AI 分析匹配度页面
+const navigateToAI = () => {
+	uni.navigateTo({
+		url: '/pages/aiAnalyse/index'
+	})
+}
+
+onLoad((options) => {
+	// 列表页通过 ?id= 传入岗位 id
+	const id = Number(options?.id)
+	if (id) getJob(id)
+})
 
 // 返回上一页
 const onBack = () => {
@@ -342,6 +345,7 @@ const onBack = () => {
 			flex-wrap: wrap;
 			gap: 16rpx;
 			margin-top: 24rpx;
+			margin-bottom: 36rpx;
 
 			.tag {
 				display: flex;

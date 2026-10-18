@@ -1,133 +1,117 @@
 <template>
 	<view class="home">
+		<!-- #ifdef APP-PLUS -->
+		<appSplash />
+		<!-- #endif -->
+
 		<view class="main">
 			<!-- 搜索栏：点击滑入搜索页 -->
-			<searchInput @open="toSearchPage"></searchInput>
+			<searchInput @open="toSearchPage" @filter="toSearchListPage"></searchInput>
 
-			<!-- 顶部 Hero 渐变卡片 -->
+			<!-- 数据卡片轮播 -->
 			<swiper class="hero-swiper" :autoplay="true" :interval="3000" :current="currentSlide"
 				@change="currentSlide = $event.detail.current">
+				<!-- 品牌与近 7 日趋势 -->
 				<swiper-item>
 					<view class="hero">
-						<!-- 品牌图标 -->
-						<view class="hero-icon">
-							<view class="hero-icon-bar hero-icon-bar--sm"></view>
-							<view class="hero-icon-bar hero-icon-bar--md"></view>
-							<view class="hero-icon-bar hero-icon-bar--lg"></view>
+						<view class="hero-top">
+							<view class="hero-icon">
+								<view class="hero-icon-bar hero-icon-bar--sm"></view>
+								<view class="hero-icon-bar hero-icon-bar--md"></view>
+								<view class="hero-icon-bar hero-icon-bar--lg"></view>
+							</view>
+							<view class="hero-text">
+								<text class="hero-title">JobVision</text>
+								<text class="hero-subtitle">大数据招聘岗位分析平台</text>
+							</view>
 						</view>
-						<!-- 品牌文案 -->
-						<view class="hero-text">
-							<text class="hero-title">JobVision</text>
-							<text class="hero-subtitle">大数据招聘岗位分析平台</text>
-						</view>
-						<!-- 实时更新徽章 -->
-						<view class="hero-badge">
-							<view class="hero-badge-dot"></view>
-							<text class="hero-badge-text">实时数据更新</text>
-						</view>
-						<!-- 右侧数据小卡 -->
-						<view class="hero-stat">
-							<text class="hero-stat-label">近 7 日岗位总量</text>
-							<text class="hero-stat-value">+23.6%</text>
-							<!-- 迷你折线图：数据由 trendValues 驱动，无数据时不绘制 -->
-							<sparkLine class="hero-stat-chart" :values="trendValues" />
+
+						<view class="hero-bottom">
+							<view class="hero-badge">
+								<view class="hero-badge-dot"></view>
+								<text class="hero-badge-text">实时数据更新</text>
+							</view>
+
+							<view class="hero-stat">
+								<text class="hero-stat-label">近 7 日岗位总量</text>
+								<text class="hero-stat-value">+23.6%</text>
+								<!-- 迷你折线图：数据由 trendValues 驱动，无数据时不绘制 -->
+								<sparkLine class="hero-stat-chart" :values="trendValues" line-color="#0A0A0A"
+									area-from="rgba(10, 10, 10, 0.10)" area-to="rgba(10, 10, 10, 0)" />
+							</view>
 						</view>
 					</view>
 				</swiper-item>
+
 				<!-- 薪酬分布：柱状图，数据为空时整块不渲染 -->
 				<swiper-item>
-					<view class="salary-card" v-if="salaryBars.length">
-						<view class="salary-head">
-							<text class="salary-title">薪酬分布</text>
-							<text class="salary-subtitle">近 7 日岗位薪资区间分布（单位：个）</text>
-						</view>
-
-						<view class="salary-bars">
-							<view class="bar-col" v-for="bar in salaryBars" :key="bar.label">
-								<!-- <text class="bar-value">{{ formatCount(bar.count) }}</text> -->
-								<view class="bar-track">
-									<view class="bar" :style="{ height: bar.height + '%' }"></view>
-								</view>
-								<text class="bar-label">{{ bar.label }}</text>
-							</view>
-						</view>
-					</view>
+					<salaryChart v-if="salaryBars.length" :items="salaryBars" />
 				</swiper-item>
+
 				<!-- 技术栈热度：横向条形，取频次 Top 6，数据为空时整块不渲染 -->
 				<swiper-item>
-					<view class="skill-card" v-if="skillBars.length">
-						<view class="skill-head">
-							<text class="skill-title">技术栈热度</text>
-							<text class="skill-subtitle">岗位描述中出现频次 Top 6</text>
-						</view>
-
-						<view class="skill-rows">
-							<view class="skill-row" v-for="item in skillBars" :key="item.label">
-								<text class="skill-name">{{ item.label }}</text>
-								<view class="skill-track">
-									<view class="skill-fill" :style="{ width: item.percent + '%' }"></view>
-									<text class="skill-percent">{{ item.percent }}%</text>
-								</view>
-							</view>
-						</view>
-					</view>
+					<skillChart v-if="skillBars.length" :items="skillBars" />
 				</swiper-item>
-				<!-- 城市岗位分布：环形图 + 图例，数据为空时整块不渲染 -->
+
+				<!-- 城市岗位分布：分段条 + 图例，数据为空时整块不渲染 -->
 				<swiper-item>
-					<view class="district-card" v-if="districtSlices.length">
-						<view class="district-head">
-							<text class="district-title">城市岗位分布</text>
-							<text class="district-subtitle">城市岗位数量占比</text>
+					<districtChart v-if="districtSlices.length" :items="districtSlices" />
+				</swiper-item>
+
+				<!-- 经验与平均薪资：折线图，数据为空时整块不渲染 -->
+				<swiper-item>
+					<view class="experience-card" v-if="experiencePoints.length">
+						<view class="card-head">
+							<text class="card-title">经验与平均薪资</text>
+							<text class="card-subtitle">不同工作经验对应的平均月薪（单位：K）</text>
 						</view>
 
-						<view class="district-body">
-							<view class="district-donut">
-								<donutChart :items="districtSlices" :center-value="formatCount(districtTotal)"
-									center-label="岗位总量" :thickness-ratio="0.36" />
-							</view>
-
-							<view class="district-legend">
-								<view class="legend-item" v-for="item in districtSlices" :key="item.name">
-									<view class="legend-dot" :style="{ backgroundColor: item.color }"></view>
-									<text class="legend-name">{{ item.name }}</text>
-									<text class="legend-percent">{{ item.percent }}%</text>
-								</view>
-							</view>
+						<view class="experience-chart">
+							<lineChart :items="experiencePoints" unit="K" />
 						</view>
 					</view>
 				</swiper-item>
 			</swiper>
-			<!-- 底部切换点 -->
+
+			<!-- 轮播切换点 -->
 			<view class="hero-swiper-dots">
 				<view :class="{ active: currentSlide === 0 }" class="swiper-dot"></view>
 				<view :class="{ active: currentSlide === 1 }" class="swiper-dot"></view>
 				<view :class="{ active: currentSlide === 2 }" class="swiper-dot"></view>
 				<view :class="{ active: currentSlide === 3 }" class="swiper-dot"></view>
+				<view :class="{ active: currentSlide === 4 }" class="swiper-dot"></view>
 			</view>
+
+			<!-- 列表标题 -->
+			<view class="section-head" v-if="jobList.length">
+				<text class="section-title">推荐职位</text>
+				<text class="section-count">{{ pagination.total }} 个机会</text>
+			</view>
+
 			<!-- 岗位卡片：一行两个 -->
 			<view class="content">
-				<view class="card" :class="{ fullCard: index >= 8 && (index - 8) % 9 === 0 }" @click="toDetail(item)"
-					v-for="(item, index) in jobList" :key="item.id">
-					<!-- 主体信息区 -->
-					<view class="card-body">
-						<view class="header">
-							<view class="header-title">
-								<text class="title">{{ item.job_name }}</text>
-							</view>
+				<view class="card" v-for="(item, index) in jobList" :key="item.id" @click="toDetail(item)">
+					<view class="card-head">
+						<!-- 图标块：黑底 / 浅灰底交替，用岗位名首字代替行业图标 -->
+						<view class="card-logo" :class="{ 'card-logo--dark': index % 2 === 0 }">
+							<text class="card-logo-text">{{ item.job_name.slice(0, 1) }}</text>
+						</view>
+						<view class="card-info">
+							<text class="title">{{ item.job_name }}</text>
 							<text class="company">{{ item.company }}</text>
 						</view>
-						<text class="salary">{{ item.salary_min }} - {{ item.salary_max }} K</text>
-						<view class="skill-tags">
-							<text class="tag tag-link" v-if="item.isDescription">查看详情</text>
-							<template v-else>
-								<text class="tag" v-for="tag in item.skill_tags" :key="tag">{{ tag }}</text>
-							</template>
-						</view>
 					</view>
-					<!-- 右侧信息区：仅整行卡片展示（见样式 .fullCard） -->
-					<view class="card-side">
-						<text class="card-side-exp">{{ item.experience }}</text>
-						<text class="card-side-more">查看详情</text>
+
+					<text class="salary">{{ item.salary_min }}-{{ item.salary_max }}K</text>
+
+					<view class="card-foot">
+						<view class="skill-tags" v-if="item.skill_tags.length && !item.isDescription">
+							<text class="tag" v-for="tag in item.skill_tags.slice(0, 3)" :key="tag">{{ tag }}</text>
+						</view>
+						<view class="detail-link" v-else>
+							<text class="detail-text">查看详情</text>
+							<view class="detail-arrow"></view>
+						</view>
 					</view>
 				</view>
 			</view>
@@ -136,13 +120,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { onReachBottom } from '@dcloudio/uni-app'
+import { reactive, ref } from 'vue'
+import { onLoad, onReachBottom } from '@dcloudio/uni-app'
+
 
 import searchInput from '@/components/searchInput.vue'
-import sparkLine from '@/components/sparkLine.vue'
-import donutChart from '@/components/donutChart.vue'
-import { getDistrict, getSalaryRange, getSkillTags } from '@/api/server'
+// #ifdef APP-PLUS
+import appSplash from '@/components/AppSplash.vue'
+// #endif
+import sparkLine from '@/components/home/sparkLine.vue'
+import districtChart from '@/components/home/districtChart.vue'
+import lineChart from '@/components/home/lineChart.vue'
+import salaryChart from '@/components/home/salaryChart.vue'
+import skillChart from '@/components/home/skillChart.vue'
+import { getDistrict, getExperienceSalary, getSalaryRange, getSkillTags } from '@/api/server'
 import { useJobList, type JobFilters, type JobRow } from '@/utils/useJobList'
 
 // swiper 索引
@@ -164,7 +155,7 @@ const query = reactive<JobFilters>({
 })
 
 // 岗位列表
-const { list: jobList, refresh, loadMore } = useJobList(() => query)
+const { list: jobList, pagination, refresh, loadMore } = useJobList(() => query)
 
 onReachBottom(loadMore)
 
@@ -174,6 +165,13 @@ const toSearchPage = () => {
 		url: '/pages/searchInput/index',
 		animationType: 'slide-in-right',
 		animationDuration: 300
+	})
+}
+
+// 点击筛选按钮：进入搜索结果页，可继续按条件筛选
+const toSearchListPage = () => {
+	uni.navigateTo({
+		url: '/pages/searchList/index'
 	})
 }
 
@@ -188,26 +186,38 @@ const toDetail = (item: JobRow) => {
 interface SalaryBar {
 	/** 区间文案：去掉结尾的 K，8 根柱子并排也不挤 */
 	label: string
-	count: number
 	/** 柱高百分比，相对轨道高度 */
 	height: number
 }
 
 const salaryBars = ref<SalaryBar[]>([])
 
-// 柱顶数量文案：过千折成 15.5k，与参考图一致
-const formatCount = (count: number) => (count >= 1000 ? (count / 1000).toFixed(1) + 'k' : String(count))
-
 // 薪资分布数据：最高 15.5k、最低 105，差两个数量级，按比例画小柱子会看不见，
-// 所以高度用开方压缩（数值仍在柱顶如实标注）；想改成等比，把 sqrt 去掉即可
+// 所以高度用开方压缩；想改成等比，把 sqrt 去掉即可
 const getSalaryChartData = async () => {
 	const res = await getSalaryRange()
 	const max = Math.max(...res.map(({ jobCount }) => jobCount))
 	salaryBars.value = res.map(({ salary_range, jobCount }) => ({
 		label: salary_range.replace(/K$/, ''),
-		count: jobCount,
 		// 下限 10%，保证最小的区间也能看到一根短柱
 		height: Math.max(10, Math.sqrt(jobCount / max) * 100)
+	}))
+}
+
+// 经验与平均薪资折线图
+interface ExperiencePoint {
+	label: string
+	value: number
+}
+
+const experiencePoints = ref<ExperiencePoint[]>([])
+
+// 经验薪资数据：接口已按经验从低到高排列，直接映射为折线点
+const getExperienceChartData = async () => {
+	const res = await getExperienceSalary()
+	experiencePoints.value = res.map(({ experience, avg_salary }) => ({
+		label: experience,
+		value: avg_salary
 	}))
 }
 
@@ -220,7 +230,7 @@ interface SkillBar {
 
 const skillBars = ref<SkillBar[]>([])
 
-// 技术栈热度数据：接口已按频次降序，取前 6 条
+// 技术栈热度数据：接口已按频次降序，取前 5 条
 const getSkillChartData = async () => {
 	const res = await getSkillTags()
 	const max = res[0]?.hot_count || 1
@@ -230,24 +240,18 @@ const getSkillChartData = async () => {
 	}))
 }
 
-// 城市岗位分布环形图
+// 城市岗位分布分段条
 interface DistrictSlice {
 	name: string
-	/** 岗位数：环图按它算扇区角度 */
-	value: number
-	color: string
 	percent: number
 }
 
 const districtSlices = ref<DistrictSlice[]>([])
-const districtTotal = ref(0)
 
-// 环图配色：蓝色由浅到深，末位「其他」用灰色
-const DISTRICT_COLORS = ['#ffffff', '#c3d6ff', '#98b6f7', '#6b93ea', '#8b9bc0']
-// 单独成扇区的城市数量，其余城市合并成「其他」
+// 单独成段的城市数量，其余城市合并成「其他」
 const DISTRICT_CITY_COUNT = 4
 
-// 城市岗位分布数据：城市按岗位数降序取前 4，其余（含接口的兜底项「其他」）合并成一个扇区
+// 城市岗位分布数据：城市按岗位数降序取前 4，其余（含接口的兜底项「其他」）合并成一个段
 const getDistrictChartData = async () => {
 	const res = await getDistrict()
 	// 接口里的「其他」是兜底汇总项，不参与城市排序
@@ -258,29 +262,28 @@ const getDistrictChartData = async () => {
 	const rest =
 		cities.slice(DISTRICT_CITY_COUNT).reduce((sum, { job_count }) => sum + job_count, 0) +
 		(res.find(({ area_name }) => area_name === '其他')?.job_count ?? 0)
+	const total = top.reduce((sum, { job_count }) => sum + job_count, 0) + rest
+	if (!total) return
 
-	districtTotal.value = top.reduce((sum, { job_count }) => sum + job_count, 0) + rest
 	districtSlices.value = [
-		...top.map(({ area_name, job_count }, index) => ({
+		...top.map(({ area_name, job_count }) => ({
 			name: area_name,
-			value: job_count,
-			color: DISTRICT_COLORS[index],
-			percent: Math.round((job_count / districtTotal.value) * 100)
+			percent: Math.round((job_count / total) * 100)
 		})),
 		{
 			name: '其他',
-			value: rest,
-			color: DISTRICT_COLORS[DISTRICT_COLORS.length - 1],
-			percent: Math.round((rest / districtTotal.value) * 100)
+			percent: Math.round((rest / total) * 100)
 		}
 	]
 }
 
-onMounted(() => {
+onLoad(() => {
 	// 首屏加载第 1 页
 	refresh()
 	// 薪资分布数据
 	getSalaryChartData()
+	// 经验薪资折线图数据
+	getExperienceChartData()
 	// 技术栈热度数据
 	getSkillChartData()
 	// 地方岗位数量数据
@@ -288,43 +291,57 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .home {
 	width: 100%;
 	min-height: 100vh;
-	background-color: #f8f8f8;
+	padding-top: 36rpx;
+	background-color: #ffffff;
 
 	.main {
-		padding: 0 24rpx;
+		padding: 0 24rpx 32rpx;
 
-		// ===== 顶部 Hero 渐变卡片 =====
+		// 轮播高度与卡片一致
+		.hero-swiper {
+			height: 288rpx;
+		}
+
+		// ===== 品牌与趋势卡片 =====
 		.hero {
-			position: relative;
+			display: flex;
+			flex-direction: column;
+			box-sizing: border-box;
 			width: 100%;
 			height: 288rpx;
-			background-image: linear-gradient(135deg, #3468f2 0%, #2350cc 52%, #16318f 100%);
-			border-radius: 31rpx;
+			padding: 28rpx;
+			background-color: #ffffff;
+			border: 2rpx solid #e8ecf3;
+			border-radius: 28rpx;
+			box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
 			overflow: hidden;
 
-			// 品牌图标：白色小柱子拼成数据图标
+			.hero-top {
+				display: flex;
+				align-items: center;
+			}
+
+			// 品牌图标：黑底圆角方块 + 白色小柱子
 			.hero-icon {
-				position: absolute;
-				left: 31rpx;
-				top: 31rpx;
 				display: flex;
 				align-items: flex-end;
 				justify-content: center;
+				flex-shrink: 0;
 				box-sizing: border-box;
-				width: 81rpx;
-				height: 81rpx;
-				padding-bottom: 21rpx;
-				background-color: #ffffff;
-				border-radius: 50%;
+				width: 76rpx;
+				height: 76rpx;
+				padding-bottom: 18rpx;
+				background-color: #0a0a0a;
+				border-radius: 22rpx;
 
 				.hero-icon-bar {
-					width: 8rpx;
+					width: 6rpx;
 					margin: 0 3rpx;
-					background-color: #2350cc;
+					background-color: #ffffff;
 					border-radius: 3rpx;
 
 					&--sm {
@@ -336,377 +353,181 @@ onMounted(() => {
 					}
 
 					&--lg {
-						height: 27rpx;
+						height: 28rpx;
 					}
 				}
 			}
 
-			// 品牌文案
 			.hero-text {
-				position: absolute;
-				left: 135rpx;
-				top: 34rpx;
+				min-width: 0;
+				margin-left: 20rpx;
 
 				.hero-title {
 					display: block;
-					font-size: 42rpx;
-					font-weight: bold;
+					font-size: 38rpx;
+					font-weight: 700;
 					line-height: 1.1;
-					color: #ffffff;
+					letter-spacing: 0.2rpx;
+					color: #0a0a0a;
 				}
 
 				.hero-subtitle {
 					display: block;
-					margin-top: 10rpx;
-					font-size: 22rpx;
+					margin-top: 8rpx;
+					font-size: 20rpx;
 					line-height: 1.2;
-					color: #bccdf5;
+					color: #9ca3af;
 				}
+			}
+
+			.hero-bottom {
+				display: flex;
+				align-items: flex-end;
+				justify-content: space-between;
+				flex: 1;
+				margin-top: 12rpx;
 			}
 
 			// 实时更新徽章
 			.hero-badge {
-				position: absolute;
-				left: 31rpx;
-				top: 162rpx;
 				display: flex;
 				align-items: center;
 				box-sizing: border-box;
-				height: 50rpx;
-				padding: 0 20rpx;
-				background-color: rgba(255, 255, 255, 0.18);
-				border-radius: 25rpx;
+				height: 44rpx;
+				margin-bottom: 12rpx;
+				padding: 0 18rpx;
+				background-color: #f5f7fa;
+				border: 2rpx solid #edf0f4;
+				border-radius: 22rpx;
 
 				.hero-badge-dot {
-					width: 13rpx;
-					height: 13rpx;
-					background-color: #4ade80;
+					width: 12rpx;
+					height: 12rpx;
+					background-color: #16a34a;
 					border-radius: 50%;
 				}
 
 				.hero-badge-text {
-					margin-left: 12rpx;
-					font-size: 21rpx;
+					margin-left: 10rpx;
+					font-size: 19rpx;
 					line-height: 1;
-					color: #ffffff;
+					color: #69717e;
 				}
 			}
 
-			// 右侧数据小卡
+			// 右侧趋势小卡
 			.hero-stat {
-				position: absolute;
-				right: 35rpx;
-				top: 27rpx;
 				box-sizing: border-box;
-				width: 231rpx;
-				height: 177rpx;
-				padding: 22rpx 22rpx 0;
-				background-color: rgba(255, 255, 255, 0.16);
-				border: 2rpx solid rgba(255, 255, 255, 0.28);
-				border-radius: 23rpx;
+				width: 268rpx;
+				height: 140rpx;
+				padding: 16rpx 18rpx 0;
+				background-color: #f8fafc;
+				border: 2rpx solid #eef1f5;
+				border-radius: 20rpx;
 
 				.hero-stat-label {
 					display: block;
 					font-size: 18rpx;
 					line-height: 1.2;
-					color: #ccdaf9;
+					color: #9ca3af;
 				}
 
 				.hero-stat-value {
 					display: block;
-					margin-top: 4rpx;
-					font-size: 33rpx;
-					font-weight: bold;
+					margin-top: 2rpx;
+					font-size: 32rpx;
+					font-weight: 700;
 					line-height: 1.2;
-					color: #ffffff;
+					color: #0a0a0a;
 				}
 
 				// 迷你趋势图：只负责占位与定尺寸，折线由 sparkLine 组件用 canvas 绘制
 				.hero-stat-chart {
 					width: 100%;
-					height: 60rpx;
-					margin-top: 8rpx;
+					height: 56rpx;
+					margin-top: 4rpx;
 				}
 			}
 		}
 
-		// ===== 薪酬分布柱状图 =====
-		.salary-card {
+		// ===== 经验与平均薪资折线图 =====
+		.experience-card {
 			display: flex;
 			flex-direction: column;
 			box-sizing: border-box;
 			width: 100%;
 			height: 288rpx;
-			padding: 24rpx 28rpx 16rpx;
-			background-image: linear-gradient(135deg, #1b2a7a 0%, #2a55dd 100%);
-			border-radius: 31rpx;
-			overflow: hidden;
+			padding: 26rpx 28rpx 18rpx;
+			background-color: #ffffff;
+			border: 2rpx solid #e8ecf3;
+			border-radius: 28rpx;
+			box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
 
-			.salary-title {
+			.card-title {
 				display: block;
 				font-size: 30rpx;
-				font-weight: bold;
-				line-height: 1.1;
-				color: #ffffff;
+				font-weight: 600;
+				line-height: 1.15;
+				color: #0a0a0a;
 			}
 
-			.salary-subtitle {
+			.card-subtitle {
 				display: block;
 				margin-top: 6rpx;
-				font-size: 19rpx;
-				line-height: 1.2;
-				color: #b9c9f5;
-			}
-
-			// 柱区：等分若干列，整体贴着卡片底部
-			.salary-bars {
-				display: flex;
-				flex: 1;
-				align-items: flex-end;
-				margin-top: 12rpx;
-
-				.bar-col {
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-					flex: 1;
-					min-width: 0;
-				}
-
-				// 柱顶数值
-				.bar-value {
-					font-size: 18rpx;
-					font-weight: bold;
-					line-height: 1;
-					color: #ffffff;
-				}
-
-				// 轨道：柱高百分比以此为基准，柱子从底部往上长
-				.bar-track {
-					display: flex;
-					align-items: flex-end;
-					justify-content: center;
-					width: 100%;
-					height: 112rpx;
-					margin-top: 8rpx;
-				}
-
-				.bar {
-					width: 40rpx;
-					background-color: #ffffff;
-					border-radius: 10rpx 10rpx 0 0;
-				}
-
-				// 区间刻度
-				.bar-label {
-					margin-top: 8rpx;
-					font-size: 19rpx;
-					line-height: 1;
-					color: #d5dffa;
-					white-space: nowrap;
-				}
-			}
-		}
-
-		// ===== 技术栈热度横向条形图 =====
-		.skill-card {
-			display: flex;
-			flex-direction: column;
-			box-sizing: border-box;
-			width: 100%;
-			height: 288rpx;
-			padding: 24rpx 28rpx 20rpx;
-			background-image: linear-gradient(135deg, #1b2a7a 0%, #2a55dd 100%);
-			border-radius: 31rpx;
-			overflow: hidden;
-
-			.skill-title {
-				display: block;
-				font-size: 30rpx;
-				font-weight: bold;
-				line-height: 1.1;
-				color: #ffffff;
-			}
-
-			.skill-subtitle {
-				display: block;
-				margin-top: 6rpx;
-				font-size: 19rpx;
-				line-height: 1.2;
-				color: #b9c9f5;
-			}
-
-			// 条形区：6 行等距铺满剩余高度
-			.skill-rows {
-				display: flex;
-				flex: 1;
-				flex-direction: column;
-				justify-content: space-between;
-				margin-top: 12rpx;
-			}
-
-			.skill-row {
-				display: flex;
-				align-items: center;
-			}
-
-			// 技能名：定宽，保证所有条形起点对齐
-			.skill-name {
-				flex-shrink: 0;
-				box-sizing: border-box;
-				width: 120rpx;
-				padding-right: 10rpx;
 				font-size: 20rpx;
-				line-height: 1;
-				color: #e3ebff;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-
-			// 轨道：浅色底 + 白色填充，百分比跟在填充末端
-			.skill-track {
-				display: flex;
-				align-items: center;
-				flex: 1;
-				min-width: 0;
-				height: 22rpx;
-				background-color: rgba(255, 255, 255, 0.18);
-				border-radius: 999rpx;
-			}
-
-			// 百分比文案放不下时，靠 flex 收缩让出宽度，条形不会顶出轨道
-			.skill-fill {
-				height: 100%;
-				background-color: #ffffff;
-				border-radius: 999rpx;
-			}
-
-			.skill-percent {
-				flex-shrink: 0;
-				margin-left: 8rpx;
-				font-size: 18rpx;
-				font-weight: bold;
-				line-height: 1;
-				color: #ffffff;
-			}
-		}
-
-		// ===== 城市岗位分布环形图 =====
-		.district-card {
-			display: flex;
-			flex-direction: column;
-			box-sizing: border-box;
-			width: 100%;
-			height: 288rpx;
-			padding: 24rpx 28rpx 20rpx;
-			background-image: linear-gradient(135deg, #1b2a7a 0%, #2a55dd 100%);
-			border-radius: 31rpx;
-			overflow: hidden;
-
-			.district-head {
-				display: flex;
-				gap: 12rpx;
-			}
-
-			.district-title {
-				display: block;
-				font-size: 30rpx;
-				font-weight: bold;
-				line-height: 1.1;
-				color: #ffffff;
-			}
-
-			.district-subtitle {
-				display: block;
-				margin-top: 6rpx;
-				font-size: 19rpx;
 				line-height: 1.2;
-				color: #b9c9f5;
+				color: #9ca3af;
 			}
 
-			// 左环图 + 右图例
-			.district-body {
-				display: flex;
-				align-items: center;
+			// 折线图占满剩余高度，尺寸由 canvas 自行量取
+			.experience-chart {
 				flex: 1;
-				margin-top: 10rpx;
-			}
-
-			// 环形图：竖直方向随 .district-body 居中，水平靠左半区留白，
-			// 使环图中心落在卡片中间偏左的位置（调整这个百分比即可左右挪动）
-			.district-donut {
-				flex-shrink: 0;
-				width: 180rpx;
-				height: 180rpx;
-				margin-left: 22%;
-			}
-
-			.district-legend {
-				display: flex;
-				align-self: stretch;
-				flex: 1;
-				flex-direction: column;
-				justify-content: center;
-				align-items: center;
-				margin-left: 20rpx;
-				gap: 18rpx;
-			}
-
-			.legend-item {
-				display: flex;
-				align-items: center;
-			}
-
-			.legend-dot {
-				flex-shrink: 0;
-				width: 14rpx;
-				height: 14rpx;
-				border-radius: 50%;
-			}
-
-			.legend-name {
-				flex: 1;
-				margin-left: 12rpx;
-				font-size: 21rpx;
-				line-height: 1;
-				color: #ffffff;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-
-			.legend-percent {
-				flex-shrink: 0;
-				font-size: 21rpx;
-				font-weight: bold;
-				line-height: 1;
-				color: #ffffff;
+				min-height: 0;
+				margin-top: 8rpx;
 			}
 		}
 
-		// 切换图导航点
+		// 轮播切换点
 		.hero-swiper-dots {
 			display: flex;
 			align-items: center;
-			justify-content: flex-start;
-			margin-top: 16rpx;
-			margin-left: 24rpx;
-			gap: 12rpx;
+			justify-content: center;
+			margin-top: 20rpx;
+			gap: 14rpx;
 
 			.swiper-dot {
-				width: 12rpx;
-				height: 12rpx;
-				background-color: #c9cfdd;
+				width: 8rpx;
+				height: 8rpx;
+				background-color: #d8dee7;
 				border-radius: 50%;
-
-
+				transition: all 0.2s ease;
 			}
 
 			.active {
-				width: 24rpx;
-				background-color: #2e63e8;
-				border-radius: 30%;
+				width: 30rpx;
+				border-radius: 4rpx;
+				background-color: #0a0a0a;
+			}
+		}
+
+		// ===== 列表标题 =====
+		.section-head {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			margin: 40rpx 0 20rpx;
+
+			.section-title {
+				font-size: 32rpx;
+				font-weight: 600;
+				line-height: 1.1;
+				color: #0a0a0a;
+			}
+
+			.section-count {
+				font-size: 21rpx;
+				line-height: 1.2;
+				color: #a0a7b2;
 			}
 		}
 
@@ -715,160 +536,140 @@ onMounted(() => {
 			display: flex;
 			flex-wrap: wrap;
 			justify-content: space-between;
-			margin-top: 24rpx;
-
-
 
 			.card {
+				display: flex;
+				flex-direction: column;
 				box-sizing: border-box;
-				width: 48%;
-				margin-bottom: 16rpx;
-				padding: 28rpx;
+				width: 48.5%;
+				margin-bottom: 20rpx;
+				padding: 24rpx;
 				background-color: #ffffff;
-				border-radius: 16rpx;
-				box-shadow: 0 8rpx 24rpx rgba(31, 60, 120, 0.08);
+				border: 2rpx solid #e8ecf3;
+				border-radius: 24rpx;
+				box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.03);
 
-				// 主体信息区：整行卡片下与右侧信息区并排，负责占满剩余宽度
-				.card-body {
+				.card-head {
+					display: flex;
+					align-items: center;
+				}
+
+				// 图标块：黑底 / 浅灰底交替
+				.card-logo {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					flex-shrink: 0;
+					box-sizing: border-box;
+					width: 56rpx;
+					height: 56rpx;
+					background-color: #f2f6fb;
+					border: 2rpx solid #e7edf5;
+					border-radius: 16rpx;
+
+					.card-logo-text {
+						font-size: 24rpx;
+						font-weight: 600;
+						line-height: 1;
+						color: #101114;
+					}
+
+					&--dark {
+						background-color: #0a0a0a;
+						border-color: #0a0a0a;
+
+						.card-logo-text {
+							color: #ffffff;
+						}
+					}
+				}
+
+				.card-info {
 					flex: 1;
 					min-width: 0;
+					margin-left: 14rpx;
 				}
 
-				// 右侧信息区：默认隐藏，仅在整行卡片中展示
-				.card-side {
-					display: none;
+				// 标题：黑色加粗，作为卡片视觉重心
+				.title {
+					display: block;
+					font-size: 27rpx;
+					font-weight: 600;
+					line-height: 1.2;
+					color: #101114;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
 				}
 
-				.header {
-					display: flex;
-					flex-direction: column;
-
-					.header-title {
-						display: flex;
-						align-items: center;
-						justify-content: space-between;
-
-						// 标题：黑色加粗，作为卡片视觉重心
-						.title {
-							font-size: 30rpx;
-							font-weight: bold;
-							line-height: 1.2;
-							color: #222222;
-							white-space: nowrap;
-							overflow: hidden;
-							text-overflow: ellipsis;
-						}
-
-						.experience {
-							display: block;
-							font-size: 24rpx;
-							line-height: 1.2;
-							color: #9aa0a6;
-						}
-					}
-
-					.company {
-						margin-top: 4rpx;
-						font-size: 20rpx;
-						line-height: 1.2;
-						color: #9aa0a6;
-						overflow: hidden;
-						text-overflow: ellipsis;
-						white-space: nowrap;
-					}
+				.company {
+					display: block;
+					margin-top: 6rpx;
+					font-size: 19rpx;
+					line-height: 1.2;
+					color: #9da4af;
+					white-space: nowrap;
+					overflow: hidden;
+					text-overflow: ellipsis;
 				}
 
-				// 薪资：蓝色加粗，作为卡片的关键信息
+				// 薪资：黑色加粗，作为卡片的关键信息
 				.salary {
 					display: block;
-					margin-top: 10rpx;
-					font-size: 26rpx;
-					font-weight: bold;
+					margin-top: 20rpx;
+					font-size: 30rpx;
+					font-weight: 700;
 					line-height: 1.2;
-					color: #2e63e8;
+					letter-spacing: 0.2rpx;
+					color: #0a0a0a;
 				}
 
-				// 技能标签：只保留一行，超出部分直接裁掉
+				// 底部：技能标签或查看详情，靠底对齐保证同排卡片一致
+				.card-foot {
+					display: flex;
+					align-items: center;
+					flex: 1;
+					margin-top: 16rpx;
+					padding-top: 4rpx;
+				}
+
 				.skill-tags {
 					display: flex;
 					flex-wrap: nowrap;
-					margin-top: 8rpx;
+					width: 100%;
 					overflow: hidden;
 
-					// 技能标签：浅灰小胶囊
 					.tag {
-						// 单行布局下禁止压缩，超出部分由容器裁掉
 						flex-shrink: 0;
-						margin: 0 6rpx 0 0;
-						padding: 4rpx 12rpx;
-						font-size: 20rpx;
+						margin-right: 8rpx;
+						padding: 3rpx 10rpx;
+						font-size: 18rpx;
 						line-height: 1.4;
-						color: #8a9099;
-						background-color: #f5f6f8;
+						color: #747d8b;
+						background-color: #f5f7fa;
+						border: 2rpx solid #edf0f4;
 						border-radius: 8rpx;
 					}
-
-					// 无技能标签时的“查看详情”：仅蓝色文字，不带底色
-					.tag-link {
-						font-weight: 500;
-						color: #2e63e8;
-						background-color: #eff6ff;
-						border-radius: 40%;
-					}
-				}
-			}
-
-			// 一整行卡片：左右分栏把整行铺满，避免内容单薄
-			.fullCard {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				width: 100%;
-
-				// 整行卡片是视觉重心，标题适当放大
-				.header .header-title .title {
-					font-size: 34rpx;
 				}
 
-				// 薪资作为关键信息，整行卡片下用主色强调
-				.salary {
-					margin-top: 14rpx;
-					font-size: 30rpx;
-					font-weight: bold;
-					color: #2e63e8;
-				}
-
-				// 横向空间充足，技能标签换行展示全部
-				.skill-tags {
-					flex-wrap: wrap;
-					overflow: visible;
-				}
-
-				// 右侧信息区：经验标签 + 行动按钮，把右侧空间用满
-				.card-side {
+				.detail-link {
 					display: flex;
-					flex-direction: column;
-					align-items: flex-end;
-					flex-shrink: 0;
-					margin-left: 28rpx;
+					align-items: center;
 
-					.card-side-exp {
-						padding: 8rpx 22rpx;
-						font-size: 22rpx;
-						line-height: 1.2;
-						color: #2e63e8;
-						background-color: #eef2fd;
-						border-radius: 999rpx;
+					.detail-text {
+						font-size: 19rpx;
+						font-weight: 500;
+						line-height: 1;
+						color: #525b69;
 					}
 
-					.card-side-more {
-						margin-top: 14rpx;
-						padding: 8rpx 22rpx;
-						font-size: 22rpx;
-						line-height: 1.2;
-						color: #ffffff;
-						background-color: #2e63e8;
-						border-radius: 999rpx;
+					.detail-arrow {
+						width: 8rpx;
+						height: 8rpx;
+						margin-left: 8rpx;
+						border-top: 2rpx solid #6c7583;
+						border-right: 2rpx solid #6c7583;
+						transform: rotate(45deg);
 					}
 				}
 			}

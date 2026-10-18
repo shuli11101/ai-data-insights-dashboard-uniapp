@@ -24,6 +24,32 @@ export const getJobList = async (params: { page: number; size: number, city: str
   return (await http.get<{ list: JobPosition[], total: number }>('/home/jobList', { params })).data
 }
 
+// 岗位详情：后端返回 salary_min / salary_max，这里统一转成 camelCase
+interface JobDetailRaw {
+  id: number
+  job_name: string
+  company: string
+  salary_min: number
+  salary_max: number
+  experience: string
+  skill_tags: string[]
+  city: string
+  district: string
+  publish_date: string
+  created_at: string
+}
+
+export interface JobDetail extends Omit<JobDetailRaw, 'salary_min' | 'salary_max'> {
+  salaryMin: number
+  salaryMax: number
+}
+
+// 获取岗位详情，id 通过 query 参数传入
+export const getJobDetail = async (id: number): Promise<JobDetail> => {
+  const { salary_min, salary_max, ...rest } = (await http.get<JobDetailRaw>('/home/jobDetail', { params: { id } })).data
+  return { ...rest, salaryMin: salary_min, salaryMax: salary_max }
+}
+
 // 获取薪资分布数据
 export const getSalaryRange = async () => {
   return (await http.get<{ salary_range: string; jobCount: number }[]>('/home/salaryRange')).data
