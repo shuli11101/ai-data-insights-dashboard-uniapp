@@ -1,5 +1,5 @@
 <template>
-	<!-- App 端启动页：与 H5 首屏启动页保持同一视觉，自行淡出后移除 -->
+	<!-- App 端启动页-->
 	<view v-if="visible" class="app-splash" :class="{ 'is-leaving': leaving }">
 		<view class="splash-logo">
 			<view class="splash-bar splash-bar--sm"></view>

@@ -8,7 +8,7 @@
 
 		<!-- ===== 两个入口卡片 ===== -->
 		<view class="entries">
-			<view class="entry" v-for="item in entries" :key="item.id" @click="toAnalyse">
+			<view @click="startSession(item.title)" class="entry" v-for="item in entries" :key="item.id">
 				<view class="entry-icon">
 					<image class="entry-icon-img" :src="item.icon" mode="aspectFit" />
 				</view>
@@ -73,11 +73,16 @@ interface SessionItem {
 	badge: string
 }
 
-// 静态数据：入口卡片
+// 技术栈分析和jd匹配 card
 const entries: EntryItem[] = [
 	{ id: 1, icon: '/static/icon/aiAnalyse/entry-stack.svg', title: '技术栈评估', desc: '输入技能，了解自身实力' },
 	{ id: 2, icon: '/static/icon/aiAnalyse/entry-jd.svg', title: 'JD 匹配', desc: '粘贴岗位，测算匹配度' }
 ]
+
+// 开始会话
+const startSession = (title: string) => {
+	uni.navigateTo({ url: '/pages/aiAnalyse/index?title=' + title })
+}
 
 // 静态数据：历史会话
 const sessions: SessionItem[] = [
