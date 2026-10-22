@@ -19,4 +19,16 @@ uni-page-body {
 	box-sizing: border-box;
 	background-color: #ffffff;
 }
+
+/* 全局隐藏滚动条（保留滚动能力）：H5 走伪元素，其它端走标准属性 */
+::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+* {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
 </style>

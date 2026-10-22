@@ -3,7 +3,15 @@
 		<!-- ===== 顶部标题 + 新建按钮 ===== -->
 		<view class="header">
 			<text class="header-title">AI 分析</text>
-			<view class="header-add" @click="toAnalyse"></view>
+			<view class="header-side">
+				<!-- 今日话题气泡：静态引导文案，点击进入对话 -->
+				<view class="topic-bubble" @click="toAnalyse">
+					<text class="topic-label">今日话题</text>
+					<text class="topic-title">{{ randomTopic.title }}</text>
+					<text class="topic-desc">{{ randomTopic.desc }}</text>
+				</view>
+				<view class="header-add" @click="toAnalyse"></view>
+			</view>
 		</view>
 
 		<!-- ===== 两个入口卡片 ===== -->
@@ -18,16 +26,30 @@
 		</view>
 
 		<!-- ===== 历史会话标题栏 ===== -->
-		<view class="section-head">
+		<view v-if="sessions.length" class="section-head">
 			<text class="section-title">历史会话</text>
-			<text class="section-count">{{ sessions.length }} 条记录</text>
+			<view class="section-actions">
+				<template v-if="!selecting">
+					<text class="section-count">{{ sessions.length }} 条记录</text>
+					<text class="manage-btn" @click="startSelect">管理</text>
+				</template>
+				<template v-else>
+					<text class="manage-btn" @click="cancelSelect">取消</text>
+					<text class="delete-btn" :class="{ 'is-disabled': !selected.length }" @click="removeSelected">
+						删除{{ selected.length ? `(${selected.length})` : '' }}
+					</text>
+				</template>
+			</view>
 		</view>
 
 		<!-- ===== 历史会话列表 ===== -->
-		<view class="panel">
-			<view class="session" v-for="item in sessions" :key="item.id" @click="toAnalyse">
+		<view v-if="sessions.length" class="panel">
+			<view class="session" v-for="item in sessions" :key="item.id" @click="onSessionClick(item)">
+				<!-- 多选态：左侧勾选圈 -->
+				<view v-if="selecting" class="session-check" :class="{ 'is-checked': isSelected(item.id) }"></view>
+
 				<!-- 左侧图标：深色圆 = 匹配度分析，浅色方 = 技术栈评估 -->
-				<view class="session-icon" :class="item.type === 'match' ? 'is-match' : 'is-stack'">
+				<view class="session-icon" :class="'is-' + item.type">
 					<image class="session-icon-img" :src="item.icon" mode="aspectFit" />
 				</view>
 
@@ -41,7 +63,7 @@
 				<view class="session-side">
 					<text class="session-time">{{ item.time }}</text>
 					<view class="session-badge" :class="item.type === 'match' ? 'is-score' : 'is-grade'">
-						{{ item.badge }}
+						{{ item.scene }}
 					</view>
 				</view>
 			</view>
@@ -50,6 +72,11 @@
 </template>
 
 <script setup lang="ts">
+import { onShow } from '@dcloudio/uni-app'
+import { computed, reactive, ref } from 'vue'
+
+import { deleteConversations, fetchConversations } from '@/api/ai'
+
 // 状态栏高度：自定义导航栏用它做顶部留白
 // H5 端拿不到状态栏高度（为 0），给 44px 保底，避免标题贴顶
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
@@ -62,16 +89,41 @@ interface EntryItem {
 	desc: string
 }
 
-/** 历史会话：match = 匹配度分析（深色圆 + 百分比），stack = 技术栈评估（浅色方 + 评级） */
+/** 历史会话：match = 匹配度分析（深色圆），stack = 技术栈评估（浅色方），chat = 多轮对话（白底圆） */
 interface SessionItem {
-	id: number
-	type: 'match' | 'stack'
+	id: string
+	type: 'match' | 'stack' | 'chat'
 	icon: string
 	title: string
 	time: string
 	desc: string
-	badge: string
+	scene: string
+	/** 是否为可还原成卡片的单轮分析（skill / jd） */
+	analysis: boolean
 }
+
+// 顶部语句随机
+interface TopicItem {
+	title: string
+	desc: string
+}
+const randomTopic = ref<TopicItem>({ title: '', desc: '' })
+const getRandomTopic = () => {
+	return headerText.content[Math.floor(Math.random() * headerText.content.length)]
+}
+const headerText = reactive({
+	label: '今日话题',
+	content: [
+		{ title: '今天想聊啥?', desc: '点我，随便聊两句' },
+		{ title: '最近怎么样?', desc: '点我，唠两句' },
+		{ title: '最近在找机会?', desc: '点我，聊聊方向' },
+		{ title: '简历要不要改改?', desc: '点我，一起看看' },
+		{ title: '有啥想吐槽的?', desc: '点我，我听着' },
+		{ title: '工作还顺心吗?', desc: '点我，聊聊' }
+	]
+})
+
+
 
 // 技术栈分析和jd匹配 card
 const entries: EntryItem[] = [
@@ -84,76 +136,143 @@ const startSession = (title: string) => {
 	uni.navigateTo({ url: '/pages/aiAnalyse/index?title=' + title })
 }
 
-// 静态数据：历史会话
-const sessions: SessionItem[] = [
-	{
-		id: 1,
-		type: 'match',
-		icon: '/static/icon/aiAnalyse/session-square.svg',
-		title: '前端开发工程师 · 字节跳动',
-		time: '10:24',
-		desc: '匹配度分析完成，核心优势：React…',
-		badge: '86%'
-	},
-	{
-		id: 2,
-		type: 'stack',
-		icon: '/static/icon/aiAnalyse/session-chart.svg',
-		title: 'React / TypeScript / Node.js',
-		time: '昨天',
-		desc: '技术栈评估完成，综合实力评级…',
-		badge: '评级 A'
-	},
-	{
-		id: 3,
-		type: 'match',
-		icon: '/static/icon/aiAnalyse/session-square.svg',
-		title: '高级前端工程师 · 美团',
-		time: '10:24',
-		desc: '匹配度分析完成，待提升：性能优化…',
-		badge: '72%'
-	},
-	{
-		id: 4,
-		type: 'stack',
-		icon: '/static/icon/aiAnalyse/session-chart.svg',
-		title: 'Vue3 / Vite / Pinia',
-		time: '周一',
-		desc: '技术栈评估完成，综合实力评级…',
-		badge: '评级 B+'
-	},
-	{
-		id: 5,
-		type: 'match',
-		icon: '/static/icon/aiAnalyse/session-square.svg',
-		title: '全栈工程师 · 某创业公司',
-		time: '10/08',
-		desc: '匹配度分析完成，待提升：后端深度…',
-		badge: '64%'
-	},
-	{
-		id: 6,
-		type: 'stack',
-		icon: '/static/icon/aiAnalyse/session-chart.svg',
-		title: 'TypeScript / GraphQL / NestJS',
-		time: '10/05',
-		desc: '技术栈评估完成，综合实力评级…',
-		badge: '评级 A-'
-	},
-	{
-		id: 7,
-		type: 'match',
-		icon: '/static/icon/aiAnalyse/session-square.svg',
-		title: '前端架构师 · 阿里巴巴',
-		time: '09/30',
-		desc: '匹配度分析完成，待提升：架构设计…',
-		badge: '58%'
-	}
-]
+// ===== 历史会话：来自后端接口 =====
+const sessions = ref<SessionItem[]>([])
 
-// 进入 AI 分析详情页
+/** 后端 scene → 列表展示配置 */
+const SCENE_META = {
+	skill: { title: '技术栈评估', type: 'stack', icon: '/static/icon/aiAnalyse/session-chart.svg' },
+	jd: { title: 'JD 匹配', type: 'match', icon: '/static/icon/aiAnalyse/session-square.svg' },
+	drawer: { title: '市场洞察', type: 'match', icon: '/static/icon/aiAnalyse/session-square.svg' },
+	chat: { title: 'AI 对话', type: 'chat', icon: '/static/icon/aiAnalyse/session-chat.svg' },
+} as const
+
+type SceneKey = keyof typeof SCENE_META
+
+/** 去掉 markdown 标记并压缩空白，作为列表摘要 */
+const toSummary = (text: string) =>
+	text
+		.replace(/^#{1,6}\s*/gm, '')
+		.replace(/\*\*/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+
+const pad = (n: number) => String(n).padStart(2, '0')
+
+/** 列表时间：今天显示时分，昨天显示「昨天」，更早显示月/日 */
+const formatTime = (iso: string) => {
+	const date = new Date(iso)
+	const now = new Date()
+	if (date.toDateString() === now.toDateString()) {
+		return `${pad(date.getHours())}:${pad(date.getMinutes())}`
+	}
+	const yesterday = new Date(now)
+	yesterday.setDate(now.getDate() - 1)
+	if (date.toDateString() === yesterday.toDateString()) {
+		return '昨天'
+	}
+	return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}`
+}
+
+const loadSessions = async () => {
+	try {
+		const list = await fetchConversations(20)
+		console.log('历史会话列表:', list)
+		sessions.value = list.map((item) => {
+			const meta = SCENE_META[item.scene as SceneKey] ?? SCENE_META.chat
+			const summary = toSummary(item.lastMessage)
+			return {
+				id: item.conversationId,
+				type: meta.type,
+				icon: meta.icon,
+				title: meta.title,
+				time: formatTime(item.updateTime),
+				desc: summary.length > 42 ? summary.slice(0, 42) + '…' : summary,
+				scene: item.scene === "chat" ? "日常" : item.scene === 'skill' ? "技术栈" : 'JD',
+				// 单轮且场景为技术栈 / JD 时，才进结果卡片页
+				analysis: item.type === 'single' && (item.scene === 'skill' || item.scene === 'jd'),
+			}
+		})
+	} catch {
+		// 拉取失败时保持空列表，不展示过期数据
+		sessions.value = []
+	}
+}
+
+// 每次回到本页都刷新，保证新建的会话能及时出现
+onShow(() => {
+	cancelSelect()
+	loadSessions()
+	randomTopic.value = getRandomTopic()
+})
+
+// 打开历史会话：单轮分析进结果卡片页，多轮对话进对话页
+const openSession = (item: SessionItem) => {
+	const path = item.analysis ? '/pages/aiAnalyse/index' : '/pages/aiChat/index'
+	uni.navigateTo({ url: `${path}?conversationId=${item.id}` })
+}
+
+// ===== 批量删除 =====
+const selecting = ref(false)
+const selected = ref<string[]>([])
+
+const startSelect = () => {
+	selecting.value = true
+}
+
+const cancelSelect = () => {
+	selecting.value = false
+	selected.value = []
+}
+
+const isSelected = (id: string) => selected.value.includes(id)
+
+const toggleSelect = (id: string) => {
+	selected.value = isSelected(id)
+		? selected.value.filter((item) => item !== id)
+		: [...selected.value, id]
+}
+
+// 多选态下点击只切换选中，不进入会话
+const onSessionClick = (item: SessionItem) => {
+	if (selecting.value) {
+		toggleSelect(item.id)
+		return
+	}
+	openSession(item)
+}
+
+const removeSelected = async () => {
+	if (!selected.value.length) return
+
+	const confirmed = await new Promise<boolean>((resolve) => {
+		uni.showModal({
+			title: '删除会话',
+			content: `确定删除选中的 ${selected.value.length} 条会话吗？`,
+			confirmColor: '#4f46f0',
+			success: (res) => resolve(!!res.confirm),
+			fail: () => resolve(false),
+		})
+	})
+	if (!confirmed) return
+
+	try {
+		await deleteConversations(selected.value)
+		sessions.value = sessions.value.filter((item) => !selected.value.includes(item.id))
+		cancelSelect()
+		uni.showToast({ title: '已删除', icon: 'none' })
+	} catch (err) {
+		uni.showModal({
+			title: '删除失败',
+			content: err instanceof Error ? err.message : '请稍后重试',
+			showCancel: false,
+		})
+	}
+}
+
+// 新建会话（右上角 +）
 const toAnalyse = () => {
-	uni.navigateTo({ url: '/pages/aiAnalyse/index' })
+	uni.navigateTo({ url: '/pages/aiChat/index' })
 }
 </script>
 
@@ -171,14 +290,76 @@ const toAnalyse = () => {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	height: 68rpx;
+	min-height: 68rpx;
 	padding: 16rpx 0 20rpx;
 
 	.header-title {
+		flex-shrink: 0;
 		font-size: 56rpx;
 		font-weight: 700;
 		line-height: 1;
 		color: #0a0a0a;
+	}
+
+	/* 右侧：话题气泡 + 新建按钮 */
+	.header-side {
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
+		gap: 12rpx;
+		margin-left: 20rpx;
+	}
+
+	/* 今日话题气泡：静态文案，点击进入对话 */
+	.topic-bubble {
+		position: relative;
+		box-sizing: border-box;
+		padding: 14rpx 20rpx 16rpx;
+		background-color: #ffffff;
+		border: 1px solid #e7e7ea;
+		border-radius: 24rpx;
+		box-shadow: 0 12rpx 16rpx rgba(10, 10, 10, 0.1);
+
+		/* 白色尖角：旋转方块，只保留朝右的两条描边 */
+		&::after {
+			content: '';
+			position: absolute;
+			top: 50%;
+			right: -9rpx;
+			width: 16rpx;
+			height: 16rpx;
+			background-color: #ffffff;
+			border-top: 1px solid #e7e7ea;
+			border-right: 1px solid #e7e7ea;
+			transform: translateY(-50%) rotate(45deg);
+		}
+
+		.topic-label {
+			display: block;
+			font-size: 18rpx;
+			line-height: 1;
+			letter-spacing: 1rpx;
+			color: #a8a8ae;
+		}
+
+		.topic-title {
+			display: block;
+			margin-top: 8rpx;
+			font-size: 26rpx;
+			font-weight: 600;
+			line-height: 1.1;
+			color: #0a0a0a;
+			white-space: nowrap;
+		}
+
+		.topic-desc {
+			display: block;
+			margin-top: 6rpx;
+			font-size: 20rpx;
+			line-height: 1.2;
+			color: #8a8a91;
+			white-space: nowrap;
+		}
 	}
 
 	/* 黑色圆形按钮：用伪元素画白色加号，避免额外图标资源 */
@@ -281,6 +462,30 @@ const toAnalyse = () => {
 		line-height: 1;
 		color: #a3a3a3;
 	}
+
+	/* 右侧操作区：记录数 / 管理 / 取消 / 删除 */
+	.section-actions {
+		display: flex;
+		align-items: center;
+		gap: 20rpx;
+	}
+
+	.manage-btn {
+		font-size: 24rpx;
+		line-height: 1;
+		color: #4f46f0;
+	}
+
+	.delete-btn {
+		font-size: 24rpx;
+		line-height: 1;
+		color: #ff5a5a;
+
+		/* 未选中任何项时置灰，避免误触 */
+		&.is-disabled {
+			color: #c9c9c9;
+		}
+	}
 }
 
 /* ===== 历史会话列表容器 ===== */
@@ -299,6 +504,36 @@ const toAnalyse = () => {
 			margin-top: 60rpx;
 		}
 
+		/* 多选态勾选圈：选中后填充黑底 + 白色对勾 */
+		.session-check {
+			position: relative;
+			flex-shrink: 0;
+			box-sizing: border-box;
+			width: 36rpx;
+			height: 36rpx;
+			margin-right: 20rpx;
+			background-color: #ffffff;
+			border: 2rpx solid #d4d4d4;
+			border-radius: 50%;
+
+			&.is-checked {
+				background-color: #0a0a0a;
+				border-color: #0a0a0a;
+
+				&::after {
+					content: '';
+					position: absolute;
+					top: 6rpx;
+					left: 11rpx;
+					width: 8rpx;
+					height: 15rpx;
+					border: solid #ffffff;
+					border-width: 0 3rpx 3rpx 0;
+					transform: rotate(45deg);
+				}
+			}
+		}
+
 		/* 左侧图标 */
 		.session-icon {
 			display: flex;
@@ -310,7 +545,7 @@ const toAnalyse = () => {
 
 			&.is-match {
 				background-color: #0a0a0a;
-				border-radius: 50%;
+				border-radius: 24rpx;
 			}
 
 			&.is-stack {
@@ -318,6 +553,14 @@ const toAnalyse = () => {
 				background-color: #f5f5f5;
 				border: 1px solid #e5e5e5;
 				border-radius: 24rpx;
+			}
+
+			/* 多轮对话：白底圆 + 细描边，与实心黑圆、浅灰方区分 */
+			&.is-chat {
+				box-sizing: border-box;
+				background-color: #ffffff;
+				border: 1px solid #e5e5e5;
+				border-radius: 50%;
 			}
 
 			.session-icon-img {

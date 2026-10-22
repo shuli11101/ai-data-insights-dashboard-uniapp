@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { streamAI } from '@/api/ai'
-import type { AiScene } from '@/api/ai'
+import type { AiScene, ChatTurn } from '@/api/ai'
 import { parseSections, sectionText } from '@/utils/aiText'
 import type { AISection } from '@/utils/aiText'
 
@@ -9,7 +9,10 @@ const REFUSE_TITLE = '无法分析'
 
 export interface AIStreamOptions {
   scene: AiScene
-  input: string
+  /** 完整对话历史，按时间顺序，最后一条必须是 user */
+  messages: ChatTurn[]
+  /** 会话 id：后端首轮返回后，从第二轮开始带上 */
+  conversationId?: string
   context?: string
 }
 
@@ -35,9 +38,9 @@ export function useAIStream() {
   const hasResult = computed(() => sections.value.some((section) => !isRefuseTitle(section.title)))
 
   /** 发起一次流式分析；重复调用会先中止上一次请求 */
-  const start = async ({ scene, input, context }: AIStreamOptions) => {
-    const text = input.trim()
-    if (!text || loading.value) return
+  const start = async ({ scene, messages, conversationId, context }: AIStreamOptions) => {
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'user' || !last.content.trim() || loading.value) return
 
     const self = new AbortController()
     controller?.abort()
@@ -50,7 +53,8 @@ export function useAIStream() {
     try {
       await streamAI({
         scene,
-        input: text,
+        messages,
+        conversationId,
         context,
         signal: self.signal,
         onDelta: (delta) => {
@@ -89,5 +93,12 @@ export function useAIStream() {
     error.value = ''
   }
 
-  return { raw, sections, hasResult, loading, error, start, stop, reset, refuseReason, refused }
+  /** 用历史记录里的已生成内容恢复结果，不发起请求 */
+  const restore = (text: string) => {
+    stop()
+    raw.value = text
+    error.value = ''
+  }
+
+  return { raw, sections, hasResult, loading, error, start, stop, reset, restore, refuseReason, refused }
 }

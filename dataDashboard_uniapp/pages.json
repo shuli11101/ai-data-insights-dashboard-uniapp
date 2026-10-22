@@ -15,9 +15,30 @@
 			}
 		},
 		{
+			"path": "pages/aiChat/index",
+			"style": {
+				"navigationBarTitleText": "AI 对话",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/aiAnalyseHome/index",
 			"style": {
 				"navigationBarTitleText": "全部任务",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/index",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/register/index",
+			"style": {
+				"navigationBarTitleText": "注册",
 				"navigationStyle": "custom"
 			}
 		},
