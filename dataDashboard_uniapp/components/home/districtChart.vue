@@ -36,8 +36,8 @@
 </template>
 
 <script setup lang="ts">
-// 灰度配色：与设计稿的极简黑白风格一致，末位浅灰用于「其他」
-const COLORS = ['#0a0a0a', '#3f4856', '#7c8798', '#c5ceda', '#e8ecf3']
+// 青色系配色：由深到浅，末位最浅用于「其他」
+const COLORS = ['#00a8b0', '#007c77', '#5ed7dc', '#a5e9ec', '#d9f1f3']
 
 withDefaults(
 	defineProps<{
@@ -55,36 +55,34 @@ withDefaults(
 	flex-direction: column;
 	box-sizing: border-box;
 	width: 100%;
-	height: 288rpx;
-	padding: 26rpx 28rpx;
+	height: 392rpx;
+	padding: 32rpx;
 	background-color: #ffffff;
-	border: 2rpx solid #e8ecf3;
-	border-radius: 28rpx;
-	box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
+	border: 2rpx solid #e9eeec;
+	border-radius: 32rpx;
 
 	.district-head {
 		display: flex;
 		align-items: center;
 	}
 
-	// 标题图标：浅灰圆角底 + 黑色柱子
+	// 标题图标：浅灰圆角底 + 青色柱子
 	.district-icon {
 		display: flex;
 		align-items: flex-end;
 		justify-content: center;
 		flex-shrink: 0;
 		box-sizing: border-box;
-		width: 54rpx;
-		height: 54rpx;
-		padding-bottom: 12rpx;
-		background-color: #f2f6fb;
-		border: 2rpx solid #e7edf5;
+		width: 60rpx;
+		height: 60rpx;
+		padding-bottom: 14rpx;
+		background-color: #f5f5f5;
 		border-radius: 16rpx;
 
 		.icon-bar {
 			width: 5rpx;
 			margin: 0 2rpx;
-			background-color: #0a0a0a;
+			background-color: #007c77;
 			border-radius: 3rpx;
 
 			&--sm {
@@ -96,7 +94,7 @@ withDefaults(
 			}
 
 			&--lg {
-				height: 24rpx;
+				height: 26rpx;
 			}
 		}
 	}
@@ -109,18 +107,18 @@ withDefaults(
 
 	.district-title {
 		display: block;
-		font-size: 30rpx;
-		font-weight: 600;
+		font-size: 32rpx;
+		font-weight: 700;
 		line-height: 1.15;
 		color: #0a0a0a;
 	}
 
 	.district-subtitle {
 		display: block;
-		margin-top: 6rpx;
-		font-size: 20rpx;
+		margin-top: 8rpx;
+		font-size: 22rpx;
 		line-height: 1.2;
-		color: #9ca3af;
+		color: #a3a3a3;
 	}
 
 	// 右侧范围胶囊：静态展示，与设计稿一致
@@ -129,32 +127,33 @@ withDefaults(
 		align-items: center;
 		flex-shrink: 0;
 		box-sizing: border-box;
-		height: 38rpx;
+		height: 40rpx;
 		padding: 0 16rpx;
-		background-color: #f5f7fa;
-		border-radius: 19rpx;
+		background-color: #f5f5f5;
+		border-radius: 20rpx;
 
 		.filter-text {
-			font-size: 19rpx;
+			font-size: 20rpx;
 			line-height: 1;
-			color: #69717e;
+			color: #737373;
 		}
 
 		.filter-chevron {
 			width: 7rpx;
 			height: 7rpx;
 			margin-left: 8rpx;
-			border-right: 2rpx solid #8f97a4;
-			border-bottom: 2rpx solid #8f97a4;
+			border-right: 2rpx solid #a3a3a3;
+			border-bottom: 2rpx solid #a3a3a3;
 			transform: rotate(45deg);
 		}
 	}
 
+	// 分段条：上下各留一份自适应空白，让条形与图例整体垂直居中
 	.district-bar {
 		display: flex;
 		width: 100%;
-		height: 20rpx;
-		margin-top: 80rpx;
+		height: 24rpx;
+		margin-top: auto;
 		overflow: hidden;
 
 		// 段间分隔：用白色右边框模拟间隙，宽度占比不受影响
@@ -163,7 +162,7 @@ withDefaults(
 			height: 100%;
 			min-width: 4rpx;
 			border-right: 6rpx solid #ffffff;
-			border-radius: 6rpx;
+			border-radius: 12rpx;
 
 			&:last-child {
 				border-right: none;
@@ -177,7 +176,8 @@ withDefaults(
 		align-items: center;
 		column-gap: 20rpx;
 		row-gap: 12rpx;
-		margin-top: 26rpx;
+		margin-top: 28rpx;
+		margin-bottom: auto;
 
 		.legend-item {
 			display: flex;
@@ -187,24 +187,24 @@ withDefaults(
 
 		.legend-dot {
 			flex-shrink: 0;
-			width: 9rpx;
-			height: 9rpx;
+			width: 10rpx;
+			height: 10rpx;
 			border-radius: 50%;
 		}
 
 		.legend-name {
 			margin-left: 8rpx;
-			font-size: 19rpx;
+			font-size: 20rpx;
 			line-height: 1;
-			color: #717a88;
+			color: #737373;
 		}
 
 		.legend-percent {
 			margin-left: 6rpx;
-			font-size: 19rpx;
+			font-size: 20rpx;
 			font-weight: 600;
 			line-height: 1;
-			color: #0a0a0a;
+			color: #737373;
 		}
 	}
 }

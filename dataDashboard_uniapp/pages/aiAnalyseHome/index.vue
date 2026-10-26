@@ -17,10 +17,12 @@
 		<!-- ===== 两个入口卡片 ===== -->
 		<view class="entries">
 			<view @click="startSession(item.title)" class="entry" v-for="item in entries" :key="item.id">
-				<view class="entry-icon">
-					<image class="entry-icon-img" :src="item.icon" mode="aspectFit" />
-				</view>
-				<text class="entry-title">{{ item.title }}</text>
+				<div class="entry-content">
+					<view class="entry-icon">
+						<image class="entry-icon-img" :src="item.icon" mode="aspectFit" />
+					</view>
+					<text class="entry-title">{{ item.title }}</text>
+				</div>
 				<text class="entry-desc">{{ item.desc }}</text>
 			</view>
 		</view>
@@ -62,7 +64,7 @@
 				<!-- 右侧：时间 + 徽标 -->
 				<view class="session-side">
 					<text class="session-time">{{ item.time }}</text>
-					<view class="session-badge" :class="item.type === 'match' ? 'is-score' : 'is-grade'">
+					<view class="session-badge" :class="'is-' + item.type">
 						{{ item.scene }}
 					</view>
 				</view>
@@ -127,8 +129,8 @@ const headerText = reactive({
 
 // 技术栈分析和jd匹配 card
 const entries: EntryItem[] = [
-	{ id: 1, icon: '/static/icon/aiAnalyse/entry-stack.svg', title: '技术栈评估', desc: '输入技能，了解自身实力' },
-	{ id: 2, icon: '/static/icon/aiAnalyse/entry-jd.svg', title: 'JD 匹配', desc: '粘贴岗位，测算匹配度' }
+	{ id: 1, icon: '/static/icon/aiAnalyse/entry-stack-teal.svg', title: '技术栈评估', desc: '输入技能，了解自身实力' },
+	{ id: 2, icon: '/static/icon/aiAnalyse/entry-jd-teal.svg', title: 'JD 匹配', desc: '粘贴岗位，测算匹配度' }
 ]
 
 // 开始会话
@@ -141,10 +143,10 @@ const sessions = ref<SessionItem[]>([])
 
 /** 后端 scene → 列表展示配置 */
 const SCENE_META = {
-	skill: { title: '技术栈评估', type: 'stack', icon: '/static/icon/aiAnalyse/session-chart.svg' },
+	skill: { title: '技术栈评估', type: 'stack', icon: '/static/icon/aiAnalyse/session-chart-teal.svg' },
 	jd: { title: 'JD 匹配', type: 'match', icon: '/static/icon/aiAnalyse/session-square.svg' },
 	drawer: { title: '市场洞察', type: 'match', icon: '/static/icon/aiAnalyse/session-square.svg' },
-	chat: { title: 'AI 对话', type: 'chat', icon: '/static/icon/aiAnalyse/session-chat.svg' },
+	chat: { title: 'AI 对话', type: 'chat', icon: '/static/icon/aiAnalyse/session-chat-teal.svg' },
 } as const
 
 type SceneKey = keyof typeof SCENE_META
@@ -249,7 +251,7 @@ const removeSelected = async () => {
 		uni.showModal({
 			title: '删除会话',
 			content: `确定删除选中的 ${selected.value.length} 条会话吗？`,
-			confirmColor: '#4f46f0',
+			confirmColor: '#1a1a1a',
 			success: (res) => resolve(!!res.confirm),
 			fail: () => resolve(false),
 		})
@@ -280,8 +282,7 @@ const toAnalyse = () => {
 .analyse-home {
 	box-sizing: border-box;
 	min-height: 100vh;
-	padding: 36rpx 40rpx 40rpx;
-	background-color: #ffffff;
+	padding: 32rpx 40rpx 40rpx;
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -290,15 +291,13 @@ const toAnalyse = () => {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	min-height: 68rpx;
-	padding: 16rpx 0 20rpx;
 
 	.header-title {
 		flex-shrink: 0;
-		font-size: 56rpx;
+		font-size: 60rpx;
 		font-weight: 700;
 		line-height: 1;
-		color: #0a0a0a;
+		color: #1a1a1a;
 	}
 
 	/* 右侧：话题气泡 + 新建按钮 */
@@ -357,19 +356,19 @@ const toAnalyse = () => {
 			margin-top: 6rpx;
 			font-size: 20rpx;
 			line-height: 1.2;
-			color: #8a8a91;
+			color: #00adb5;
 			white-space: nowrap;
 		}
 	}
 
-	/* 黑色圆形按钮：用伪元素画白色加号，避免额外图标资源 */
+	/* 青色圆形按钮：用伪元素画白色加号，避免额外图标资源 */
 	.header-add {
 		position: relative;
 		flex-shrink: 0;
 		width: 68rpx;
 		height: 68rpx;
 		border-radius: 50%;
-		background-color: #0a0a0a;
+		background-color: #007c77;
 
 		&::before,
 		&::after {
@@ -397,48 +396,56 @@ const toAnalyse = () => {
 /* ===== 入口卡片 ===== */
 .entries {
 	display: flex;
-	gap: 20rpx;
+	gap: 24rpx;
+	margin-top: 44rpx;
 
 	.entry {
 		flex: 1;
 		min-width: 0;
 		box-sizing: border-box;
-		height: 168rpx;
-		padding: 20rpx 28rpx;
+		height: 176rpx;
+		padding: 36rpx 36rpx;
 		background-color: #ffffff;
-		border: 1px solid #e5e5e5;
 		border-radius: 24rpx;
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 
-		.entry-icon {
+		// card 顶部
+		.entry-content {
 			display: flex;
 			align-items: center;
-			justify-content: center;
-			width: 56rpx;
-			height: 56rpx;
-			margin-bottom: 4rpx;
-			background-color: #f5f5f5;
-			border-radius: 50%;
+			justify-content: space-around;
+		}
+
+		/* 图标改为无底色的青色线性图标 */
+		.entry-icon {
+			display: flex;
+			align-items: flex-start;
+			justify-content: flex-start;
+			width: 44rpx;
+			height: 44rpx;
+			margin-bottom: 6rpx;
 
 			.entry-icon-img {
-				width: 24rpx;
-				height: 24rpx;
+				width: 44rpx;
+				height: 44rpx;
 			}
 		}
 
 		.entry-title {
 			display: block;
-			font-size: 28rpx;
-			font-weight: 700;
+			font-size: 30rpx;
+			font-weight: 600;
 			line-height: 1.2;
-			color: #0a0a0a;
+			color: #222222;
 		}
 
 		.entry-desc {
 			display: block;
-			margin-top: 8rpx;
+			text-align: center;
+			margin-top: 18rpx;
 			font-size: 22rpx;
 			line-height: 1.2;
-			color: #737373;
+			color: #999999;
 		}
 	}
 }
@@ -448,19 +455,19 @@ const toAnalyse = () => {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin: 40rpx 0 18rpx;
+	margin: 46rpx 0 10rpx;
 
 	.section-title {
-		font-size: 26rpx;
-		font-weight: 700;
+		font-size: 27rpx;
+		font-weight: 600;
 		line-height: 1;
-		color: #737373;
+		color: #333333;
 	}
 
 	.section-count {
-		font-size: 24rpx;
+		font-size: 21rpx;
 		line-height: 1;
-		color: #a3a3a3;
+		color: #b0b0b0;
 	}
 
 	/* 右侧操作区：记录数 / 管理 / 取消 / 删除 */
@@ -471,13 +478,13 @@ const toAnalyse = () => {
 	}
 
 	.manage-btn {
-		font-size: 24rpx;
+		font-size: 21rpx;
 		line-height: 1;
-		color: #4f46f0;
+		color: #00adb5;
 	}
 
 	.delete-btn {
-		font-size: 24rpx;
+		font-size: 21rpx;
 		line-height: 1;
 		color: #ff5a5a;
 
@@ -488,23 +495,28 @@ const toAnalyse = () => {
 	}
 }
 
-/* ===== 历史会话列表容器 ===== */
+/* ===== 历史会话列表容器：平铺列表，仅用分隔线区分条目 ===== */
 .panel {
-	padding: 24rpx;
-	background-color: #ffffff;
-	border: 1px solid #f5f5f5;
-	border-radius: 24rpx;
+	padding: 0;
 
 	.session {
+		position: relative;
 		display: flex;
 		align-items: center;
-		height: 88rpx;
+		padding: 38rpx 0;
 
-		&+.session {
-			margin-top: 60rpx;
+		/* 分隔线：与右侧文案左边缘对齐，末端跟随内容区 */
+		&+.session::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 108rpx;
+			right: 0;
+			height: 1px;
+			background-color: #e8e9ea;
 		}
 
-		/* 多选态勾选圈：选中后填充黑底 + 白色对勾 */
+		/* 多选态勾选圈：选中后填充青色 + 白色对勾 */
 		.session-check {
 			position: relative;
 			flex-shrink: 0;
@@ -517,8 +529,8 @@ const toAnalyse = () => {
 			border-radius: 50%;
 
 			&.is-checked {
-				background-color: #0a0a0a;
-				border-color: #0a0a0a;
+				background-color: #007c77;
+				border-color: #007c77;
 
 				&::after {
 					content: '';
@@ -534,7 +546,7 @@ const toAnalyse = () => {
 			}
 		}
 
-		/* 左侧图标 */
+		/* 左侧图标：统一圆角方块，实心青色 / 浅青两种底色 */
 		.session-icon {
 			display: flex;
 			align-items: center;
@@ -542,30 +554,24 @@ const toAnalyse = () => {
 			flex-shrink: 0;
 			width: 84rpx;
 			height: 84rpx;
+			border-radius: 20rpx;
 
 			&.is-match {
-				background-color: #0a0a0a;
-				border-radius: 24rpx;
+				background-color: #007c77;
 			}
 
 			&.is-stack {
-				box-sizing: border-box;
-				background-color: #f5f5f5;
-				border: 1px solid #e5e5e5;
-				border-radius: 24rpx;
+				background-color: #e7f7f7;
 			}
 
-			/* 多轮对话：白底圆 + 细描边，与实心黑圆、浅灰方区分 */
+			/* 多轮对话：与浅青底保持同一种视觉语言 */
 			&.is-chat {
-				box-sizing: border-box;
-				background-color: #ffffff;
-				border: 1px solid #e5e5e5;
-				border-radius: 50%;
+				background-color: #e7f7f7;
 			}
 
 			.session-icon-img {
-				width: 28rpx;
-				height: 28rpx;
+				width: 38rpx;
+				height: 38rpx;
 			}
 		}
 
@@ -579,9 +585,9 @@ const toAnalyse = () => {
 			.session-name {
 				display: block;
 				font-size: 30rpx;
-				font-weight: 700;
+				font-weight: 600;
 				line-height: 1.2;
-				color: #0a0a0a;
+				color: #222222;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
@@ -589,10 +595,10 @@ const toAnalyse = () => {
 
 			.session-desc {
 				display: block;
-				margin-top: 5rpx;
-				font-size: 25rpx;
+				margin-top: 6rpx;
+				font-size: 23rpx;
 				line-height: 1.2;
-				color: #737373;
+				color: #999999;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
@@ -607,9 +613,9 @@ const toAnalyse = () => {
 			flex-shrink: 0;
 
 			.session-time {
-				font-size: 22rpx;
+				font-size: 21rpx;
 				line-height: 1;
-				color: #a3a3a3;
+				color: #c0c0c0;
 			}
 
 			.session-badge {
@@ -617,25 +623,30 @@ const toAnalyse = () => {
 				align-items: center;
 				justify-content: center;
 				box-sizing: border-box;
-				height: 40rpx;
+				height: 36rpx;
 				margin-top: 12rpx;
-				padding: 0 16rpx;
-				font-size: 22rpx;
-				font-weight: 700;
+				padding: 0 14rpx;
+				font-size: 19rpx;
 				line-height: 1;
 				border-radius: 999rpx;
 
-				/* 匹配度：黑底白字 */
-				&.is-score {
-					background-color: #0a0a0a;
+				/* 匹配度：实心青色 + 白字 */
+				&.is-match {
+					background-color: #007c77;
+					font-weight: 600;
 					color: #ffffff;
 				}
 
-				/* 评级：浅底灰字 */
-				&.is-grade {
-					background-color: #f5f5f5;
-					border: 1px solid #e5e5e5;
-					color: #525252;
+				/* 技术栈：浅青底 + 青字 */
+				&.is-stack {
+					background-color: #e2f5f6;
+					color: #00adb5;
+				}
+
+				/* 日常对话：白底 + 灰字 */
+				&.is-chat {
+					background-color: #ffffff;
+					color: #999999;
 				}
 			}
 		}

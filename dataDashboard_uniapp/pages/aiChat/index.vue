@@ -2,23 +2,29 @@
 	<view class="ai-chat" :style="{ paddingTop: statusBarHeight + 'px' }">
 		<!-- ===== 顶部控制区 ===== -->
 		<view class="top-controls">
-			<image class="back-btn" src="/static/icon/aiAnalyse/back.svg" mode="aspectFit" @click="onBack" />
+			<view class="back" @click="onBack"></view>
+			<text class="top-title">AI 分析</text>
+			<text class="history" @click="goHistory">历史</text>
 		</view>
 
 		<!-- ===== 空态：问候语 + 快捷入口 ===== -->
 		<view v-if="!messages.length && !loadingHistory" class="empty-stage">
 			<view class="greeting">
-				<view class="greeting-card">
-					<text class="greeting-hello">Hey 你好</text>
-					<text class="greeting-title">今天想</text>
-					<text class="greeting-title">聊点什么？</text>
-				</view>
+				<text class="greeting-title">今天想聊点什么？</text>
+				<text class="greeting-desc">岗位匹配、技能差距、面试准备，都可以聊。</text>
 			</view>
 
 			<view class="suggestions">
+				<text class="suggestions-label">可以这样开始</text>
 				<view class="chip" v-for="item in suggestions" :key="item.text" @click="goScene(item)">
-					<image class="chip-icon" :class="'chip-icon--' + item.type" :src="item.icon" mode="aspectFit" />
-					<text class="chip-text">{{ item.text }}</text>
+					<view class="chip-icon-wrap">
+						<image class="chip-icon" :class="'chip-icon--' + item.type" :src="item.icon" mode="aspectFit" />
+					</view>
+					<view class="chip-texts">
+						<text class="chip-title">{{ item.text }}</text>
+						<text class="chip-desc">{{ item.desc }}</text>
+					</view>
+					<view class="chip-chevron"></view>
 				</view>
 			</view>
 		</view>
@@ -42,27 +48,22 @@
 
 		<!-- ===== 底部输入区 ===== -->
 		<view class="composer">
-			<input class="composer-input" v-model="message" type="text" placeholder="发消息或按住说话..." confirm-type="send"
-				confirm-hold :focus="inputFocused" @focus="inputFocused = true" @blur="inputFocused = false"
-				:adjust-position="true" cursor-spacing="20" placeholder-class="composer-placeholder"
-				@confirm="sendMessage" />
+			<view class="composer-box">
+				<input class="composer-input" v-model="message" type="text" placeholder="发消息或按住说话…" confirm-type="send"
+					confirm-hold :focus="inputFocused" @focus="inputFocused = true" @blur="inputFocused = false"
+					:adjust-position="true" cursor-spacing="20" placeholder-class="composer-placeholder" @confirm="sendMessage" />
+			</view>
 			<view class="composer-row">
-				<view class="row-left">
-					<view class="icon-btn">
-						<image class="icon-btn-icon icon-btn-icon--plus" src="/static/icon/aiAnalyse/plus.svg"
-							mode="aspectFit" />
-					</view>
+				<view class="icon-btn">
+					<image class="icon-btn-icon icon-btn-icon--plus" src="/static/icon/aiAnalyse/plus.svg" mode="aspectFit" />
 				</view>
 
 				<view class="row-right">
 					<view class="icon-btn">
-						<image class="icon-btn-icon icon-btn-icon--mic" src="/static/icon/aiAnalyse/mic.svg"
-							mode="aspectFit" />
+						<image class="icon-btn-icon icon-btn-icon--mic" src="/static/icon/aiAnalyse/mic.svg" mode="aspectFit" />
 					</view>
-					<view class="icon-btn icon-btn--send" :class="{ 'icon-btn--disabled': sending }"
-						@click="sendMessage">
-						<image class="icon-btn-icon icon-btn-icon--send" src="/static/icon/aiAnalyse/send.svg"
-							mode="aspectFit" />
+					<view class="icon-btn icon-btn--send" :class="{ 'icon-btn--disabled': sending }" @click="sendMessage">
+						<image class="icon-btn-icon icon-btn-icon--send" src="/static/icon/aiAnalyse/send.svg" mode="aspectFit" />
 					</view>
 				</view>
 			</view>
@@ -128,6 +129,7 @@ const anchor = ref('')
 
 interface Suggestion {
 	text: string
+	desc: string
 	icon: string
 	type: 'remote' | 'research'
 	title: string
@@ -135,8 +137,20 @@ interface Suggestion {
 
 // 快捷入口：跳到对应的单轮分析页
 const suggestions: Suggestion[] = [
-	{ text: '进行技术栈分析', icon: '/static/icon/aiAnalyse/remote-control.svg', type: 'remote', title: '技术栈评估' },
-	{ text: '进行jd分析', icon: '/static/icon/aiAnalyse/research.svg', type: 'research', title: 'JD 匹配' },
+	{
+		text: '技术栈分析',
+		desc: '看看技能与目标岗位的距离',
+		icon: '/static/icon/aiAnalyse/remote-control.svg',
+		type: 'remote',
+		title: '技术栈评估'
+	},
+	{
+		text: 'JD 分析',
+		desc: '粘贴岗位描述，拆解优势与差距',
+		icon: '/static/icon/aiAnalyse/research.svg',
+		type: 'research',
+		title: 'JD 匹配'
+	},
 ]
 
 const goScene = (item: Suggestion) => {
@@ -291,13 +305,18 @@ const onBack = () => {
 		uni.switchTab({ url: '/pages/aiAnalyseHome/index' })
 	}
 }
+
+// 历史：切到会话列表 tab
+const goHistory = () => {
+	uni.switchTab({ url: '/pages/aiAnalyseHome/index' })
+}
 </script>
 
 <style lang="scss">
 /* 输入框占位符：placeholder-class 需为独立类名，不能嵌套在页面根类里 */
 .composer-placeholder {
-	font-size: 30rpx;
-	color: #b5b5b5;
+	font-size: 26rpx;
+	color: #97a4aa;
 }
 
 .ai-chat {
@@ -307,7 +326,6 @@ const onBack = () => {
 	flex-direction: column;
 	height: 100vh;
 	padding: 36rpx 31rpx 40rpx;
-	background-color: #f4f4f4;
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
 	/* 自定义顶部提示：固定顶部居中，深色胶囊 + 轻投影 */
@@ -351,15 +369,36 @@ const onBack = () => {
 		flex-shrink: 0;
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		height: 84rpx;
-		margin-top: 25rpx;
+		justify-content: space-between;
+		height: 88rpx;
+		margin-top: 8rpx;
 
-		.back-btn {
+		/* 返回箭头：左 + 下描边旋转 45°，指向左侧 */
+		.back {
+			flex-shrink: 0;
+			width: 20rpx;
+			height: 20rpx;
+			border-left: 3rpx solid #3d4b54;
+			border-bottom: 3rpx solid #3d4b54;
+			transform: rotate(45deg);
+		}
+
+		.top-title {
 			position: absolute;
-			left: 0;
-			width: 64rpx;
-			height: 64rpx;
+			left: 50%;
+			font-size: 29rpx;
+			font-weight: 600;
+			line-height: 1;
+			letter-spacing: -0.4rpx;
+			color: #3d4b54;
+			transform: translateX(-50%);
+		}
+
+		.history {
+			flex-shrink: 0;
+			font-size: 24rpx;
+			line-height: 1;
+			color: #65747c;
 		}
 	}
 
@@ -401,9 +440,9 @@ const onBack = () => {
 		line-height: 1.6;
 
 		&--user {
-			background-color: #4f46f0;
+			background-color: #007c77;
 			/* 靠近说话人的右下角收窄，形成指向感 */
-			border-radius: 32rpx 32rpx 8rpx 32rpx;
+			border-radius: 28rpx 28rpx 8rpx 28rpx;
 
 			.bubble-text {
 				color: #ffffff;
@@ -419,7 +458,7 @@ const onBack = () => {
 			box-shadow: none;
 
 			.bubble-text {
-				color: #1f1f1f;
+				color: #17252b;
 			}
 		}
 	}
@@ -441,7 +480,7 @@ const onBack = () => {
 	.typing-dot {
 		width: 10rpx;
 		height: 10rpx;
-		background-color: #c4c4c4;
+		background-color: #b9c9c6;
 		border-radius: 50%;
 		animation: typing-bounce 1.2s infinite ease-in-out;
 
@@ -475,39 +514,23 @@ const onBack = () => {
 
 	/* ===== 问候语 ===== */
 	.greeting {
-		margin-top: 200rpx;
+		margin-top: 160rpx;
 
-		.greeting-card {
-			box-sizing: border-box;
-			padding: 48rpx 44rpx;
+		.greeting-title {
+			display: block;
+			font-size: 58rpx;
+			font-weight: 700;
+			line-height: 1.3;
+			letter-spacing: -2rpx;
+			color: #17252b;
+		}
 
-			.greeting-hello {
-				display: inline-block;
-				box-sizing: border-box;
-				padding: 14rpx 28rpx;
-				margin-bottom: 40rpx;
-				background-color: #f3f1ff;
-				border-radius: 999rpx;
-				font-size: 30rpx;
-				font-weight: 600;
-				line-height: 1;
-				letter-spacing: 1rpx;
-				color: #4f46f0;
-			}
-
-			.greeting-title {
-				display: block;
-				font-size: 62rpx;
-				font-weight: 800;
-				line-height: 1.3;
-				letter-spacing: 1rpx;
-				color: #111111;
-
-				/* 末行用品牌色做强调 */
-				&:last-child {
-					color: #4f46f0;
-				}
-			}
+		.greeting-desc {
+			display: block;
+			margin-top: 16rpx;
+			font-size: 25rpx;
+			line-height: 1.45;
+			color: #65747c;
 		}
 	}
 
@@ -515,85 +538,136 @@ const onBack = () => {
 	.suggestions {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		gap: 15rpx;
+		gap: 16rpx;
 		margin-top: auto;
-		padding-top: 40rpx;
+		padding: 40rpx 0 8rpx;
+
+		.suggestions-label {
+			margin-bottom: 4rpx;
+			font-size: 21rpx;
+			line-height: 1.2;
+			color: #8a979e;
+		}
 
 		.chip {
 			display: flex;
 			align-items: center;
 			box-sizing: border-box;
-			height: 59rpx;
-			padding: 0 24rpx;
-			background-color: #fcfcfc;
-			border: 2rpx solid #e6e6e6;
-			border-radius: 23rpx;
+			height: 116rpx;
+			padding: 0 28rpx;
+			background-color: #ffffff;
+			border: 2rpx solid #dde8e7;
+			border-radius: 24rpx;
 
-			.chip-text {
-				font-size: 25rpx;
-				line-height: 1;
-				color: #1f1f1f;
+			.chip-icon-wrap {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				width: 44rpx;
+				height: 44rpx;
 			}
 
 			.chip-icon {
-				margin-right: 17rpx;
-
 				&--remote {
-					width: 25rpx;
-					height: 22rpx;
+					width: 30rpx;
+					height: 26rpx;
 				}
 
 				&--research {
-					width: 23rpx;
-					height: 23rpx;
+					width: 26rpx;
+					height: 28rpx;
 				}
+			}
+
+			.chip-texts {
+				flex: 1;
+				min-width: 0;
+				margin-left: 18rpx;
+			}
+
+			.chip-title {
+				display: block;
+				font-size: 27rpx;
+				font-weight: 600;
+				line-height: 1.2;
+				color: #17252b;
+			}
+
+			.chip-desc {
+				display: block;
+				margin-top: 6rpx;
+				font-size: 21rpx;
+				line-height: 1.2;
+				color: #8a979e;
+			}
+
+			.chip-chevron {
+				flex-shrink: 0;
+				width: 12rpx;
+				height: 12rpx;
+				margin-left: 16rpx;
+				border-top: 2rpx solid #9aa6ac;
+				border-right: 2rpx solid #9aa6ac;
+				transform: rotate(45deg);
 			}
 		}
 	}
 
-	/* ===== 底部输入区 ===== */
+	/* ===== 底部输入区：通栏白底，左右贴屏幕边缘 ===== */
 	.composer {
 		flex-shrink: 0;
 		box-sizing: border-box;
-		height: 191rpx;
-		margin-top: 18rpx;
-		padding: 31rpx 19rpx 0;
+		margin: 18rpx -31rpx -40rpx;
+		padding: 32rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
 		background-color: #ffffff;
-		border-radius: 50rpx;
+		border-top: 2rpx solid #e3ebec;
+
+		/* 输入框：浅底细描边，贴合设计稿的圆角矩形 */
+		.composer-box {
+			display: flex;
+			align-items: center;
+			box-sizing: border-box;
+			height: 88rpx;
+			padding: 0 24rpx;
+			background-color: #f5f8f7;
+			border: 2rpx solid #e2eaea;
+			border-radius: 24rpx;
+		}
 
 		.composer-input {
-			height: 36rpx;
-			font-size: 30rpx;
-			line-height: 36rpx;
-			color: #1f1f1f;
-			margin-left: 16rpx;
+			flex: 1;
+			min-width: 0;
+			height: 100%;
+			font-size: 26rpx;
+			color: #17252b;
 		}
 
 		.composer-row {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			margin-top: 29rpx;
+			margin-top: 20rpx;
 
-			.row-left,
 			.row-right {
 				display: flex;
 				align-items: center;
-				gap: 19rpx;
+				gap: 20rpx;
 			}
 
 			.icon-btn {
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				width: 65rpx;
-				height: 65rpx;
-				background-color: #f0f0f0;
+				width: 68rpx;
+				height: 68rpx;
+				background-color: #f1f7f5;
 				border-radius: 50%;
 
 				&--send {
-					background-color: #4f46f0;
+					width: 72rpx;
+					height: 72rpx;
+					background-image: linear-gradient(180deg, #007c77 0%, #00746f 100%);
 				}
 
 				/* 请求进行中：发送按钮降透明度，提示不可重复点击 */
@@ -604,18 +678,18 @@ const onBack = () => {
 
 			.icon-btn-icon {
 				&--plus {
-					width: 20rpx;
-					height: 20rpx;
-				}
-
-				&--mic {
-					width: 18rpx;
+					width: 26rpx;
 					height: 26rpx;
 				}
 
+				&--mic {
+					width: 24rpx;
+					height: 32rpx;
+				}
+
 				&--send {
-					width: 38rpx;
-					height: 38rpx;
+					width: 36rpx;
+					height: 36rpx;
 				}
 			}
 		}

@@ -88,8 +88,8 @@
 		}
 	],
 	"tabBar": {
-		"color": "#9CA3AF",
-		"selectedColor": "#2563EB",
+		"color": "#a3a3a3",
+		"selectedColor": "#007c77",
 		"backgroundColor": "#FFFFFF",
 		"borderStyle": "white",
 		"list": [
@@ -121,7 +121,7 @@
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "首页",
 		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"backgroundColor": "#FFFFFF"
 	},
 	"uniIdRouter": {}
 }

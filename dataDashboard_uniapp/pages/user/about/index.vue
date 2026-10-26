@@ -1,37 +1,29 @@
 <template>
 	<view class="about-page">
 		<!-- ===== 顶部导航 ===== -->
-		<view class="header" :style="{ paddingTop: statusBarHeight + 'px' }">
-			<view class="back-btn" @click="goBack">
-				<image class="back-icon" src="/static/icon/user/back.svg" mode="aspectFit" />
-			</view>
-			<text class="page-title">关于</text>
+		<view class="appbar" :style="{ marginTop: statusBarHeight + 'px' }">
+			<view class="back" @click="goBack"></view>
+			<text class="appbar-title">关于</text>
 		</view>
 
-		<!-- ===== 品牌信息 ===== -->
+		<!-- ===== 品牌 ===== -->
 		<view class="brand">
-			<view class="brand-logo">
-				<image class="brand-logo-icon" src="/static/icon/user/users-white.svg" mode="aspectFit" />
-			</view>
-			<text class="brand-name">关于我们</text>
-			<text class="brand-version">版本 1.4.2（2026.09）</text>
+			<image class="brand-mark" src="/static/icon/auth/brand-mark.svg" mode="aspectFit" />
+			<text class="brand-name">AI 分析</text>
+			<text class="brand-version">版本 1.4.2 · 2026.09</text>
 
-			<view class="latest-pill">
-				<image class="latest-icon" src="/static/icon/user/check.svg" mode="aspectFit" />
+			<view class="latest">
+				<view class="latest-check"></view>
 				<text class="latest-text">已是最新版本</text>
 			</view>
 		</view>
 
 		<!-- ===== 支持 ===== -->
-		<view class="section-head">
-			<text class="section-title">支持</text>
-		</view>
+		<text class="group-label">支持</text>
 
-		<view class="list-card">
+		<view class="support-card">
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/activity.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/activity.svg" mode="aspectFit" />
 				<text class="row-title">检查更新</text>
 				<view class="row-right">
 					<text class="row-value">已是最新</text>
@@ -42,29 +34,26 @@
 			<view class="row-divider"></view>
 
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/document.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/document.svg" mode="aspectFit" />
 				<text class="row-title">用户协议与隐私</text>
-				<view class="chevron"></view>
+				<view class="row-right">
+					<view class="chevron"></view>
+				</view>
 			</view>
 
 			<view class="row-divider"></view>
 
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/info.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/info.svg" mode="aspectFit" />
 				<text class="row-title">开源许可</text>
-				<view class="chevron"></view>
+				<view class="row-right">
+					<view class="chevron"></view>
+				</view>
 			</view>
 		</view>
 
 		<!-- ===== 页脚 ===== -->
-		<view class="footer">
-			<text class="footer-text">© 2026 AI 分析 · 保留所有权利</text>
-			<text class="footer-text">为认真打磨技术的人而设计</text>
-		</view>
+		<text class="footer">© 2026 AI 分析 · 保留所有权利</text>
 	</view>
 </template>
 
@@ -80,150 +69,133 @@ const goBack = () => {
 
 <style lang="scss" scoped>
 .about-page {
+	display: flex;
+	flex-direction: column;
 	box-sizing: border-box;
 	width: 100%;
 	min-height: 100vh;
-	padding: 36rpx 24rpx 40rpx;
-	background-color: #ffffff;
+	padding: 32rpx 40rpx 40rpx;
 
 	// ===== 顶部导航 =====
-	.header {
+	.appbar {
+		position: relative;
 		display: flex;
 		align-items: center;
-		padding-bottom: 16rpx;
+		box-sizing: border-box;
+		height: 88rpx;
 
-		.back-btn {
+		/* 返回：白色圆钮 + 描边箭头 */
+		.back {
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			flex-shrink: 0;
 			box-sizing: border-box;
-			width: 68rpx;
-			height: 68rpx;
+			width: 74rpx;
+			height: 74rpx;
 			background-color: #ffffff;
-			border: 2rpx solid #e8ecf3;
+			border: 2rpx solid #d8e2e3;
 			border-radius: 50%;
+
+			&::after {
+				content: '';
+				width: 18rpx;
+				height: 18rpx;
+				border-left: 3rpx solid #3d4b54;
+				border-bottom: 3rpx solid #3d4b54;
+				transform: rotate(45deg);
+			}
 		}
 
-		.back-icon {
-			width: 30rpx;
-			height: 30rpx;
-		}
-
-		.page-title {
-			margin-left: 16rpx;
-			font-size: 34rpx;
+		.appbar-title {
+			position: absolute;
+			left: 50%;
+			font-size: 30rpx;
 			font-weight: 600;
-			line-height: 1.1;
-			letter-spacing: 0.2rpx;
-			color: #0a0a0a;
+			line-height: 1;
+			letter-spacing: -0.4rpx;
+			color: #17252b;
+			transform: translateX(-50%);
 		}
 	}
 
-	// ===== 品牌信息 =====
+	// ===== 品牌 =====
 	.brand {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		margin-top: 24rpx;
+		margin-top: 32rpx;
 
-		.brand-logo {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			width: 124rpx;
-			height: 124rpx;
-			background-color: #0a0a0a;
-			border-radius: 38rpx;
-			box-shadow: 0 16rpx 36rpx rgba(10, 10, 10, 0.18);
-		}
-
-		.brand-logo-icon {
-			width: 52rpx;
-			height: 52rpx;
+		.brand-mark {
+			width: 128rpx;
+			height: 128rpx;
 		}
 
 		.brand-name {
-			margin-top: 20rpx;
-			font-size: 38rpx;
+			margin-top: 24rpx;
+			font-size: 46rpx;
 			font-weight: 700;
 			line-height: 1.1;
-			letter-spacing: 0.2rpx;
-			color: #0a0a0a;
+			letter-spacing: -1.2rpx;
+			color: #17252b;
 		}
 
 		.brand-version {
-			margin-top: 10rpx;
-			font-size: 19rpx;
+			margin-top: 12rpx;
+			font-size: 21rpx;
 			line-height: 1.2;
-			color: #a8a8ae;
+			color: #8a979e;
 		}
 
-		// 已是最新版本胶囊
-		.latest-pill {
+		/* 已是最新版本：小对勾 + 文字，不使用胶囊 */
+		.latest {
 			display: flex;
 			align-items: center;
-			box-sizing: border-box;
-			height: 38rpx;
-			margin-top: 14rpx;
-			padding: 0 16rpx;
-			background-color: #f5f5f7;
-			border-radius: 19rpx;
-		}
+			margin-top: 16rpx;
 
-		.latest-icon {
-			width: 17rpx;
-			height: 17rpx;
-			margin-right: 7rpx;
-		}
+			.latest-check {
+				width: 16rpx;
+				height: 9rpx;
+				margin-right: 10rpx;
+				border-left: 2rpx solid #487c77;
+				border-bottom: 2rpx solid #487c77;
+				transform: rotate(-45deg);
+			}
 
-		.latest-text {
-			font-size: 18rpx;
-			line-height: 1;
-			color: #8a8a91;
+			.latest-text {
+				font-size: 21rpx;
+				line-height: 1;
+				color: #487c77;
+			}
 		}
 	}
 
-	// ===== 分组标题 =====
-	.section-head {
-		margin: 36rpx 0 16rpx;
-
-		.section-title {
-			font-size: 30rpx;
-			font-weight: 600;
-			line-height: 1.1;
-			color: #0a0a0a;
-		}
+	// ===== 支持 =====
+	.group-label {
+		display: block;
+		margin: 48rpx 0 16rpx;
+		font-size: 24rpx;
+		font-weight: 600;
+		line-height: 1.2;
+		letter-spacing: 0.4rpx;
+		color: #78868f;
 	}
 
-	// ===== 支持列表 =====
-	.list-card {
+	.support-card {
 		box-sizing: border-box;
-		padding: 0 24rpx;
+		padding: 0 40rpx;
 		background-color: #ffffff;
-		border: 2rpx solid #e8ecf3;
-		border-radius: 28rpx;
-		box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
-		overflow: hidden;
+		border: 2rpx solid #dde8e7;
+		border-radius: 32rpx;
+	}
 
-		.list-row {
-			display: flex;
-			align-items: center;
-			height: 100rpx;
-		}
+	.list-row {
+		display: flex;
+		align-items: center;
+		height: 110rpx;
 
 		.row-icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
 			flex-shrink: 0;
-			width: 64rpx;
-			height: 64rpx;
-			background-color: #f5f5f7;
-			border-radius: 50%;
-		}
-
-		.row-icon-img {
 			width: 30rpx;
 			height: 30rpx;
 		}
@@ -231,11 +203,10 @@ const goBack = () => {
 		.row-title {
 			flex: 1;
 			min-width: 0;
-			margin-left: 18rpx;
-			font-size: 28rpx;
-			font-weight: 500;
+			margin-left: 20rpx;
+			font-size: 27rpx;
 			line-height: 1.2;
-			color: #0a0a0a;
+			color: #3d4b54;
 		}
 
 		.row-right {
@@ -246,40 +217,63 @@ const goBack = () => {
 		}
 
 		.row-value {
-			font-size: 22rpx;
+			font-size: 21rpx;
 			line-height: 1;
-			color: #8a8a91;
+			color: #8a979e;
+		}
+	}
+
+	.row-divider {
+		height: 2rpx;
+		margin-left: 50rpx;
+		background-color: #edf2f2;
+	}
+
+	.chevron {
+		width: 12rpx;
+		height: 12rpx;
+		margin-left: 12rpx;
+		border-top: 2rpx solid #9aa6ac;
+		border-right: 2rpx solid #9aa6ac;
+		transform: rotate(45deg);
+	}
+
+	// ===== 品牌宣言 =====
+	.statement {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin-top: auto;
+		padding-top: 80rpx;
+
+		.statement-title {
+			display: block;
+			font-size: 42rpx;
+			font-weight: 600;
+			line-height: 1.5;
+			letter-spacing: -0.6rpx;
+			text-align: center;
+			color: #17252b;
 		}
 
-		.row-divider {
-			height: 2rpx;
-			margin-left: 82rpx;
-			background-color: #f0f0f2;
-		}
-
-		.chevron {
-			flex-shrink: 0;
-			width: 10rpx;
-			height: 10rpx;
-			margin-left: 10rpx;
-			border-top: 2rpx solid #a8a8ae;
-			border-right: 2rpx solid #a8a8ae;
-			transform: rotate(45deg);
+		.statement-desc {
+			display: block;
+			margin-top: 32rpx;
+			font-size: 23rpx;
+			line-height: 1.4;
+			text-align: center;
+			color: #65747c;
 		}
 	}
 
 	// ===== 页脚 =====
 	.footer {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		margin-top: 32rpx;
-
-		.footer-text {
-			font-size: 19rpx;
-			line-height: 1.9;
-			color: #a8a8ae;
-		}
+		display: block;
+		margin-top: 40rpx;
+		font-size: 20rpx;
+		line-height: 1.4;
+		text-align: center;
+		color: #8a979e;
 	}
 }
 </style>

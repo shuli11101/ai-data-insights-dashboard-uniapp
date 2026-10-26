@@ -1,100 +1,123 @@
 <template>
 	<view class="auth-page">
-		<!-- ===== 奶油色头部：品牌 + 标题 ===== -->
-		<view class="hero" :key="heroKey" :style="{ paddingTop: statusBarHeight + 'px' }">
+		<!-- ===== 顶部栏：返回 + 品牌 + 登录帮助 ===== -->
+		<view class="topbar">
+			<view class="back" @click="goBack"></view>
+
 			<view class="brand">
-				<image class="brand-mark" src="/static/icon/auth/brand.svg" mode="aspectFit" />
+				<image class="brand-mark" src="/static/icon/auth/brand-mark.svg" mode="aspectFit" />
 				<text class="brand-name">AI 分析</text>
-				<view class="brand-dot"></view>
 			</view>
 
-			<view class="hero-copy">
-				<image class="hero-art" src="/static/icon/auth/hero-sun.svg" mode="aspectFit" />
-				<text class="hero-title">欢迎回来</text>
-				<view class="hero-line"></view>
-				<text class="hero-desc">继续看看，有没有更适合你的机会。</text>
+			<text class="help">登录帮助</text>
+		</view>
+
+		<!-- ===== 标题 ===== -->
+		<view class="intro">
+			<text class="intro-title">登录</text>
+			<text class="intro-desc">继续查看你的技能评估和岗位分析记录。</text>
+		</view>
+
+		<!-- ===== 手机号 ===== -->
+		<view class="field">
+			<view class="field-head">
+				<text class="field-label">手机号</text>
+				<text class="field-hint">中国大陆</text>
+			</view>
+			<view class="field-box">
+				<text class="phone-prefix">+86</text>
+				<view class="phone-divider"></view>
+				<input class="field-input" type="number" v-model="phone" maxlength="11" placeholder="请输入手机号"
+					placeholder-class="field-placeholder" />
 			</view>
 		</view>
 
-		<!-- ===== 登录表单卡片 ===== -->
-		<view class="form-card">
-			<view class="field field-phone">
-				<!-- <view class="field-icon">
-					<image class="field-icon-img" src="/static/icon/auth/phone.svg" mode="aspectFit" />
-				</view> -->
-				<view class="field-main">
-					<view class="field-row">
-						<text class="field-prefix">+86</text>
-						<input class="field-input" type="number" v-model="phone" maxlength="11" placeholder="请输入手机号"
-							placeholder-class="field-placeholder" />
-					</view>
-				</view>
+		<!-- ===== 短信验证码 ===== -->
+		<view class="field">
+			<view class="field-head">
+				<text class="field-label">短信验证码</text>
+				<text class="field-hint">6 位数字</text>
 			</view>
-
-			<view class="field">
-				<!-- <view class="field-icon">
-					<image class="field-icon-img" src="/static/icon/auth/shield.svg" mode="aspectFit" />
-				</view> -->
-				<view class="field-main">
-					<view class="field-row">
-						<input class="field-input" type="number" v-model="code" maxlength="6" placeholder="输入 6 位验证码"
-							placeholder-class="field-placeholder" />
-					</view>
-				</view>
-				<view class="code-btn">获取验证码</view>
+			<view class="field-box">
+				<input class="field-input" type="number" v-model="code" maxlength="6" placeholder="请输入验证码"
+					placeholder-class="field-placeholder" />
+				<view class="code-divider"></view>
+				<text class="code-btn">获取验证码</text>
 			</view>
 		</view>
 
 		<!-- ===== 主按钮 ===== -->
 		<view class="primary-btn">登录</view>
 
-		<!-- ===== 微信一键登录 ===== -->
-		<view class="ghost-btn">
-			<image class="ghost-icon" src="/static/icon/auth/wechat.svg" mode="aspectFit" />
-			<text class="ghost-text">微信一键登录</text>
-		</view>
-
 		<!-- ===== 去注册 ===== -->
 		<view class="switch-row">
 			<text class="switch-text">还没有账号？</text>
-			<text class="switch-link" @click="toRegister">去注册</text>
+			<text class="switch-link" @click="toRegister">注册账号</text>
 		</view>
 
-		<!-- ===== 安全提示 ===== -->
+		<!-- ===== 协议勾选 ===== -->
+		<view class="consent" @click="agreed = !agreed">
+			<view class="consent-box" :class="{ 'is-checked': agreed }"></view>
+			<text class="consent-text">我已阅读并同意<text class="consent-link">《用户协议》</text>和<text
+					class="consent-link">《隐私政策》</text></text>
+		</view>
+
+		<!-- ===== 其他登录方式 ===== -->
+		<view class="divider">
+			<view class="divider-line"></view>
+			<text class="divider-text">其他登录方式</text>
+			<view class="divider-line"></view>
+		</view>
+
+		<view class="wechat-btn">
+			<image class="wechat-icon" src="/static/icon/auth/wechat.svg" mode="aspectFit" />
+			<text class="wechat-text">微信登录</text>
+		</view>
+
+		<!-- ===== 隐私提示 ===== -->
 		<view class="tip">
-			<view class="tip-check"></view>
-			<text class="tip-text">登录后，分析记录和求职意向会自动保存</text>
+			<image class="tip-icon" src="/static/icon/auth/lock.svg" mode="aspectFit" />
+			<text class="tip-text">账号信息仅用于登录，分析记录仅自己可见</text>
 		</view>
 
-		<!-- ===== 底部协议 ===== -->
+		<!-- ===== 底部安全提示 ===== -->
 		<view class="footer">
 			<view class="footer-line"></view>
-			<text class="footer-text">登录即代表你同意<text class="footer-link">《用户协议》</text>和<text
-					class="footer-link">《隐私政策》</text></text>
+			<view class="footer-safe">
+				<image class="footer-icon" src="/static/icon/auth/shield-safe.svg" mode="aspectFit" />
+				<text class="footer-text">求职安全提示：正规招聘不会以任何名义收取费用</text>
+			</view>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { onShow } from '@dcloudio/uni-app'
 import { ref } from 'vue'
-
-// H5 端拿不到状态栏高度（为 0），头部内容靠上，用 0 兜底即可
-const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 0
-
-// 每次进入页面递增 key，让头部重新挂载以重播下落入场动画
-const heroKey = ref(0)
-onShow(() => {
-	heroKey.value += 1
-})
 
 // 静态表单数据：暂未接入登录接口
 const phone = ref('')
 const code = ref('')
+// 默认勾选，与注册页保持一致
+const agreed = ref(true)
 
 // 注册页替换当前页，避免登录/注册来回跳转堆积页面栈
 const toRegister = () => {
 	uni.redirectTo({ url: '/pages/register/index' })
+}
+
+// 返回上一页：上一页若是注册页则跳过它，回到进入注册前的页面
+const goBack = () => {
+	const pages = getCurrentPages()
+	const prev = pages[pages.length - 2]
+	const skipRegister = !!prev?.route && prev.route.indexOf('pages/register/index') > -1
+	const delta = skipRegister ? 2 : 1
+
+	if (pages.length > delta) {
+		uni.navigateBack({ delta })
+		return
+	}
+	// 没有可返回的页面时回首页
+	uni.switchTab({ url: '/pages/home/index' })
 }
 </script>
 
@@ -104,198 +127,165 @@ const toRegister = () => {
 	flex-direction: column;
 	box-sizing: border-box;
 	min-height: 100vh;
-	background-color: #ffffff;
+	padding: 0 48rpx;
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Helvetica, Arial,
 		sans-serif;
 }
 
-/* ===== 奶油色头部 ===== */
-.hero {
-	box-sizing: border-box;
-	padding: 0 40rpx 90rpx;
-	background-color: #f8f2e8;
-	border-bottom-left-radius: 62rpx;
-	border-bottom-right-radius: 62rpx;
-	/* 每次进入页面从顶部缓缓落下 */
-	animation: hero-drop 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+/* ===== 顶部栏 ===== */
+.topbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 72rpx;
+	margin-top: 48rpx;
+
+	/* 返回箭头：左 + 下描边旋转 45°，指向左侧 */
+	.back {
+		flex-shrink: 0;
+		width: 18rpx;
+		height: 18rpx;
+		border-left: 3rpx solid #3d4b54;
+		border-bottom: 3rpx solid #3d4b54;
+		transform: rotate(45deg);
+	}
 
 	.brand {
 		display: flex;
 		align-items: center;
-		padding-top: 52rpx;
-		/* 等头部落位后再淡入 */
-		animation: hero-content-in 0.45s ease-out 0.7s both;
+		min-width: 0;
+		margin-left: 24rpx;
 
 		.brand-mark {
-			width: 48rpx;
-			height: 48rpx;
+			flex-shrink: 0;
+			width: 64rpx;
+			height: 64rpx;
 		}
 
 		.brand-name {
 			margin-left: 16rpx;
-			font-size: 21rpx;
-			font-weight: 500;
-			letter-spacing: 0.5rpx;
-			color: #5a544a;
-		}
-
-		.brand-dot {
-			width: 9rpx;
-			height: 9rpx;
-			margin-left: 12rpx;
-			background-color: #d3a07c;
-			border-radius: 50%;
+			font-size: 30rpx;
+			font-weight: 700;
+			line-height: 1;
+			letter-spacing: -0.3rpx;
+			color: #17252b;
+			white-space: nowrap;
 		}
 	}
 
-	.hero-copy {
-		position: relative;
-		display: flex;
-		flex-direction: column;
-		margin-top: 96rpx;
-		/* 等头部落位后再淡入 */
-		animation: hero-content-in 0.45s ease-out 0.7s both;
-
-		/* 右上角装饰插画 */
-		.hero-art {
-			position: absolute;
-			top: -70rpx;
-			right: 24rpx;
-			width: 110rpx;
-			height: 110rpx;
-		}
-
-		.hero-title {
-			font-family: 'Noto Serif SC', 'Songti SC', SimSun, serif;
-			font-size: 58rpx;
-			font-weight: 600;
-			line-height: 1.2;
-			letter-spacing: -1.4rpx;
-			color: #2e2b27;
-		}
-
-		.hero-line {
-			width: 48rpx;
-			height: 4rpx;
-			margin-top: 14rpx;
-			background-color: #d3a07c;
-			border-radius: 2rpx;
-		}
-
-		.hero-desc {
-			margin-top: 20rpx;
-			font-size: 22rpx;
-			line-height: 1.4;
-			color: #8c8275;
-		}
-	}
-}
-
-/* ===== 表单卡片：上浮压在头部圆角上 ===== */
-.form-card {
-	position: relative;
-	box-sizing: border-box;
-	margin: -56rpx 40rpx 0;
-	padding: 8rpx 0;
-	background-color: #ffffff;
-	border: 1px solid #efe8dd;
-	border-radius: 38rpx;
-	box-shadow: 0 28rpx 40rpx rgba(74, 59, 44, 0.1);
-}
-
-.field {
-	position: relative;
-	display: flex;
-	align-items: center;
-	height: 124rpx;
-	padding: 0 42rpx 0 62rpx;
-
-	/* 行间分割线：从文案区起笔，避开左侧图标 */
-	&+.field::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 24rpx;
-		right: 32rpx;
-		height: 1px;
-		background-color: #f4eee4;
-	}
-
-	.field-icon {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+	.help {
 		flex-shrink: 0;
-		width: 58rpx;
-		height: 58rpx;
-		background-color: #f8f2e8;
-		border-radius: 50%;
+		font-size: 24rpx;
+		line-height: 1;
+		color: #65747c;
+	}
+}
 
-		.field-icon-img {
-			width: 30rpx;
-			height: 30rpx;
-		}
+/* ===== 标题 ===== */
+.intro {
+	margin-top: 56rpx;
+
+	.intro-title {
+		display: block;
+		font-size: 62rpx;
+		font-weight: 700;
+		line-height: 1.15;
+		letter-spacing: -2rpx;
+		color: #17252b;
 	}
 
+	.intro-desc {
+		display: block;
+		margin-top: 20rpx;
+		font-size: 27rpx;
+		line-height: 1.6;
+		color: #65747c;
+	}
+}
 
-	.field-main {
-		flex: 1;
-		min-width: 0;
-		margin-left: 28rpx;
+/* ===== 表单项 ===== */
+.field {
+	margin-top: 44rpx;
+
+	.field-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		margin-bottom: 12rpx;
 
 		.field-label {
-			display: block;
-			font-size: 18rpx;
+			font-size: 25rpx;
+			font-weight: 600;
 			line-height: 1.2;
-			color: #978d80;
+			letter-spacing: 0.3rpx;
+			color: #3d4b54;
 		}
 
-		.field-row {
-			display: flex;
-			align-items: center;
-			margin-top: 10rpx;
-
-			.field-prefix {
-				margin-right: 16rpx;
-				font-size: 26rpx;
-				font-weight: 500;
-				line-height: 1.2;
-				color: #5c7c68;
-			}
-
-			.field-input {
-				flex: 1;
-				min-width: 0;
-				height: 36rpx;
-				font-size: 28rpx;
-				line-height: 36rpx;
-				color: #2e2b27;
-			}
+		.field-hint {
+			font-size: 21rpx;
+			line-height: 1.2;
+			color: #78868f;
 		}
 	}
 
-	/* 获取验证码胶囊 */
-	.code-btn {
-		flex-shrink: 0;
-		margin-left: 16rpx;
-		padding: 0 20rpx;
-		height: 46rpx;
-		font-size: 28rpx;
-		font-weight: 500;
-		line-height: 46rpx;
-		color: rgb(45, 45, 45);
-		border-radius: 999rpx;
-	}
-}
+	/* 输入框：白底胶囊，独立的描边盒子 */
+	.field-box {
+		display: flex;
+		align-items: center;
+		box-sizing: border-box;
+		height: 106rpx;
+		padding: 0 30rpx;
+		background-color: #ffffff;
+		border: 2rpx solid #d8e2e3;
+		border-radius: 23rpx;
 
-.field-phone {
-	padding-left: 0rpx;
+		.phone-prefix {
+			flex-shrink: 0;
+			font-size: 28rpx;
+			font-weight: 500;
+			line-height: 1;
+			letter-spacing: 0.7rpx;
+			color: #3d4b54;
+		}
+
+		.phone-divider {
+			flex-shrink: 0;
+			width: 2rpx;
+			height: 40rpx;
+			margin: 0 24rpx;
+			background-color: #e3ebec;
+		}
+
+		.field-input {
+			flex: 1;
+			min-width: 0;
+			height: 100%;
+			font-size: 30rpx;
+			color: #17252b;
+		}
+
+		.code-divider {
+			flex-shrink: 0;
+			width: 2rpx;
+			height: 68rpx;
+			margin: 0 24rpx;
+			background-color: #e3ebec;
+		}
+
+		.code-btn {
+			flex-shrink: 0;
+			font-size: 25rpx;
+			font-weight: 600;
+			line-height: 1;
+			color: #007c77;
+		}
+	}
 }
 
 /* 输入框占位文案：独立类名，保证各端都能命中 */
 .field-placeholder {
-	font-size: 28rpx;
-	color: #b5ac9f;
+	font-size: 30rpx;
+	color: #a1acb3;
 }
 
 /* ===== 主按钮 ===== */
@@ -303,130 +293,181 @@ const toRegister = () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 86rpx;
-	margin: 34rpx 40rpx 0;
-	font-size: 24rpx;
+	height: 104rpx;
+	margin-top: 44rpx;
+	font-size: 32rpx;
 	font-weight: 600;
+	letter-spacing: 1rpx;
 	color: #ffffff;
-	background-color: #5c7c68;
-	border-radius: 43rpx;
-	box-shadow: 0 18rpx 24rpx rgba(92, 124, 104, 0.28);
-}
-
-/* ===== 微信登录 ===== */
-.ghost-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	box-sizing: border-box;
-	height: 86rpx;
-	margin: 20rpx 40rpx 0;
-	background-color: #ffffff;
-	border: 1px solid #e7e0d5;
-	border-radius: 43rpx;
-
-	.ghost-icon {
-		width: 36rpx;
-		height: 36rpx;
-		margin-right: 14rpx;
-	}
-
-	.ghost-text {
-		font-size: 22rpx;
-		font-weight: 500;
-		color: #5a544a;
-	}
+	background-image: linear-gradient(180deg, #007c77 0%, #00746f 100%);
+	border-radius: 24rpx;
 }
 
 /* ===== 去注册 ===== */
 .switch-row {
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	margin-top: 44rpx;
-	font-size: 20rpx;
+	margin-top: 40rpx;
+	font-size: 25rpx;
 	line-height: 1.4;
 
 	.switch-text {
-		color: #8c8275;
+		color: #65747c;
 	}
 
 	.switch-link {
-		margin-left: 6rpx;
+		margin-left: 4rpx;
 		font-weight: 600;
-		color: #4e6b58;
+		color: #007c77;
 	}
 }
 
-/* ===== 安全提示 ===== */
+/* ===== 协议勾选 ===== */
+.consent {
+	display: flex;
+	align-items: center;
+	margin-top: 32rpx;
+
+	.consent-box {
+		position: relative;
+		box-sizing: border-box;
+		flex-shrink: 0;
+		width: 32rpx;
+		height: 32rpx;
+		background-color: #ffffff;
+		border: 2rpx solid #c7d3d5;
+		border-radius: 9rpx;
+
+		&.is-checked {
+			background-color: #007c77;
+			border-color: #007c77;
+
+			&::after {
+				content: '';
+				position: absolute;
+				top: 2rpx;
+				left: 10rpx;
+				width: 7rpx;
+				height: 14rpx;
+				border: solid #ffffff;
+				border-width: 0 3rpx 3rpx 0;
+				transform: rotate(45deg);
+			}
+		}
+	}
+
+	.consent-text {
+		margin-left: 18rpx;
+		font-size: 23rpx;
+		line-height: 1.4;
+		color: #65747c;
+	}
+
+	.consent-link {
+		font-weight: 500;
+		color: #3d4b54;
+		text-decoration: underline;
+		text-decoration-color: #cbd5d6;
+	}
+}
+
+/* ===== 其他登录方式 ===== */
+.divider {
+	display: flex;
+	align-items: center;
+	margin-top: 56rpx;
+
+	.divider-line {
+		flex: 1;
+		height: 2rpx;
+		background-color: #dfe7e8;
+	}
+
+	.divider-text {
+		flex-shrink: 0;
+		margin: 0 24rpx;
+		font-size: 21rpx;
+		line-height: 1;
+		color: #78868f;
+	}
+}
+
+/* ===== 微信登录 ===== */
+.wechat-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	height: 88rpx;
+	margin-top: 48rpx;
+	background-color: rgba(255, 255, 255, 0.82);
+	border: 2rpx solid #d8e2e3;
+	border-radius: 23rpx;
+
+	.wechat-icon {
+		flex-shrink: 0;
+		width: 40rpx;
+		height: 40rpx;
+		margin-right: 12rpx;
+	}
+
+	.wechat-text {
+		font-size: 26rpx;
+		font-weight: 500;
+		line-height: 1;
+		color: #3d4b54;
+	}
+}
+
+/* ===== 隐私提示 ===== */
 .tip {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin-top: 28rpx;
+	margin-top: 56rpx;
 
-	.tip-check {
-		width: 14rpx;
-		height: 24rpx;
-		margin-right: 14rpx;
-		border: solid #5c7c68;
-		border-width: 0 3rpx 3rpx 0;
-		transform: rotate(45deg);
+	.tip-icon {
+		flex-shrink: 0;
+		width: 24rpx;
+		height: 28rpx;
+		margin-right: 12rpx;
 	}
 
 	.tip-text {
-		font-size: 19rpx;
+		font-size: 21rpx;
 		line-height: 1.4;
-		color: #a79d90;
+		color: #7d8b91;
 	}
 }
 
-/* ===== 底部协议 ===== */
+/* ===== 底部安全提示 ===== */
 .footer {
 	margin-top: auto;
-	padding: 40rpx 40rpx 56rpx;
+	padding: 40rpx 0 48rpx;
 
 	.footer-line {
-		height: 1px;
-		margin-bottom: 32rpx;
-		background-color: #f2ece2;
+		height: 2rpx;
+		margin-bottom: 16rpx;
+		background-color: rgba(208, 223, 222, 0.68);
+	}
+
+	.footer-safe {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.footer-icon {
+		flex-shrink: 0;
+		width: 26rpx;
+		height: 26rpx;
+		margin-right: 12rpx;
 	}
 
 	.footer-text {
-		display: block;
-		font-size: 18rpx;
-		line-height: 1.6;
-		text-align: center;
-		color: #a79d90;
-	}
-
-	.footer-link {
-		color: #4e6b58;
-		text-decoration: underline;
-	}
-}
-
-/* 头部入场：从顶部落位 */
-@keyframes hero-drop {
-	from {
-		transform: translateY(-100%);
-	}
-
-	to {
-		transform: translateY(0);
-	}
-}
-
-/* 头部内容：落位后逐渐显现 */
-@keyframes hero-content-in {
-	from {
-		opacity: 0;
-		transform: translateY(12rpx);
-	}
-
-	to {
-		opacity: 1;
-		transform: translateY(0);
+		font-size: 21rpx;
+		line-height: 1.4;
+		color: #7b898f;
 	}
 }
 </style>

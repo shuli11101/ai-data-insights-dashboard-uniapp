@@ -1,131 +1,111 @@
 <template>
 	<view class="personal-page">
 		<!-- ===== 顶部导航 ===== -->
-		<view class="header" :style="{ paddingTop: statusBarHeight + 'px' }">
-			<view class="back-btn" @click="goBack">
-				<image class="back-icon" src="/static/icon/user/back.svg" mode="aspectFit" />
-			</view>
-			<text class="page-title">求职意向</text>
+		<view class="appbar" :style="{ marginTop: statusBarHeight + 'px' }">
+			<view class="back" @click="goBack"></view>
+			<text class="appbar-title">求职意向</text>
 		</view>
 
-		<text class="page-desc">填写后，AI 会优先推荐更符合你期望的岗位。</text>
-
-		<!-- ===== AI 提示 ===== -->
-		<view class="tip-card">
-			<view class="tip-icon">
-				<image class="tip-icon-img" src="/static/icon/user/sparkles-white.svg" mode="aspectFit" />
-			</view>
-			<view class="tip-text">
-				<text class="tip-title">让 AI 更懂你的下一步</text>
-				<text class="tip-desc">城市、技术栈与薪资会直接影响推荐排序</text>
-			</view>
-		</view>
-
-		<!-- ===== 基本意向 ===== -->
-		<view class="section-head">
-			<text class="section-title">基本意向</text>
-		</view>
-
-		<view class="list-card">
-			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/briefcase.svg" mode="aspectFit" />
+		<!-- ===== 意向表单纸 ===== -->
+		<view class="sheet">
+			<!-- 引导提示 -->
+			<view class="guide">
+				<view class="guide-icon"></view>
+				<view class="guide-text">
+					<text class="guide-title">填写后，推荐会更贴近你的期望</text>
+					<text class="guide-desc">城市、技术栈与薪资都会参与岗位排序</text>
 				</view>
-				<text class="row-title">工作经验</text>
-				<view class="row-right">
+			</view>
+
+			<!-- 基本意向 -->
+			<view class="group">
+				<text class="group-label">基本意向</text>
+
+				<view class="row">
+					<image class="row-icon" src="/static/icon/user/briefcase.svg" mode="aspectFit" />
+					<text class="row-title">工作经验</text>
 					<text class="row-value">3–5 年</text>
-					<view class="chevron"></view>
 				</view>
-			</view>
 
-			<view class="row-divider"></view>
+				<view class="row-divider"></view>
 
-			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/pin.svg" mode="aspectFit" />
-				</view>
-				<text class="row-title">意向城市</text>
-				<view class="row-right">
+				<view class="row">
+					<image class="row-icon" src="/static/icon/user/pin.svg" mode="aspectFit" />
+					<text class="row-title">意向城市</text>
 					<text class="row-value">上海 · 杭州</text>
-					<view class="chevron"></view>
 				</view>
-			</view>
 
-			<view class="row-divider"></view>
+				<view class="row-divider"></view>
 
-			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/graduation.svg" mode="aspectFit" />
-				</view>
-				<text class="row-title">学历</text>
-				<view class="row-right">
+				<view class="row">
+					<image class="row-icon" src="/static/icon/user/graduation.svg" mode="aspectFit" />
+					<text class="row-title">学历</text>
 					<text class="row-value">本科</text>
-					<view class="chevron"></view>
 				</view>
 			</view>
-		</view>
 
-		<!-- ===== 技术栈 ===== -->
-		<view class="section-head">
-			<text class="section-title">技术栈</text>
-		</view>
-
-		<view class="stack-card">
-			<view class="stack-meta">
-				<text class="stack-meta-text">已选 {{ skills.length }} 项</text>
-				<text class="stack-meta-text">最多 8 项</text>
-			</view>
-
-			<view class="stack-tags">
-				<view class="stack-tag" v-for="skill in skills" :key="skill">
-					<text class="stack-tag-text">{{ skill }}</text>
-					<image class="stack-tag-close" src="/static/icon/user/close.svg" mode="aspectFit" />
+			<!-- 技术栈 -->
+			<view class="group">
+				<view class="group-head">
+					<text class="group-label">技术栈</text>
+					<text class="group-note">最多 8 项</text>
 				</view>
 
-				<view class="stack-tag stack-tag--add">
-					<image class="stack-tag-plus" src="/static/icon/user/plus.svg" mode="aspectFit" />
+				<view class="stack-tags">
+					<view class="stack-tag" v-for="skill in skills" :key="skill">
+						<text class="stack-tag-text">{{ skill }}</text>
+						<view class="stack-tag-close"></view>
+					</view>
+				</view>
+
+				<view class="stack-add">
+					<view class="stack-add-icon">
+						<view class="plus-line plus-line--h"></view>
+						<view class="plus-line plus-line--v"></view>
+					</view>
 					<text class="stack-add-text">添加技术栈</text>
+					<text class="stack-add-note">支持自定义</text>
 				</view>
-				<text class="stack-hint">支持自定义</text>
 			</view>
-		</view>
 
-		<!-- ===== 薪资情况 ===== -->
-		<view class="section-head">
-			<text class="section-title">薪资情况</text>
-		</view>
+			<!-- 薪资情况 -->
+			<view class="group">
+				<view class="group-head">
+					<text class="group-label">薪资情况</text>
+					<text class="group-note">均为税前</text>
+				</view>
 
-		<view class="salary-card">
-			<view class="salary-top">
 				<view class="segmented">
 					<view class="segment segment--active">月薪</view>
 					<view class="segment">年薪</view>
 				</view>
-				<text class="tax-note">均为税前</text>
-			</view>
 
-			<view class="salary-row">
-				<text class="salary-label">当前薪资</text>
-				<text class="salary-value">20–30K · 14 薪</text>
-			</view>
+				<view class="salary-row">
+					<text class="salary-label">当前薪资</text>
+					<text class="salary-value">20–30K · 14薪</text>
+				</view>
 
-			<view class="salary-row salary-row--divided">
-				<text class="salary-label">期望薪资</text>
-				<text class="salary-value">30–40K · 14 薪</text>
-			</view>
+				<view class="row-divider row-divider--full"></view>
 
-			<text class="salary-hint">按 14 薪计算，期望年包约 42–56 万</text>
+				<view class="salary-row">
+					<text class="salary-label">期望薪资</text>
+					<text class="salary-value salary-value--accent">30–40K · 14薪</text>
+				</view>
+
+				<text class="salary-hint">按 14 薪计算，期望年薪包约 42–56 万</text>
+			</view>
 		</view>
 
-		<!-- ===== 保存 ===== -->
-		<view class="save-btn">
-			<text class="save-text">保存求职意向</text>
-		</view>
+		<!-- ===== 固定保存栏 ===== -->
+		<view class="save-bar">
+			<view class="save-btn">
+				<text class="save-text">保存求职意向</text>
+			</view>
 
-		<!-- 隐私说明 -->
-		<view class="privacy-note">
-			<image class="privacy-icon" src="/static/icon/user/lock.svg" mode="aspectFit" />
-			<text class="privacy-text">求职意向仅用于岗位匹配，不会公开</text>
+			<view class="privacy-note">
+				<image class="privacy-icon" src="/static/icon/user/lock.svg" mode="aspectFit" />
+				<text class="privacy-text">求职意向仅用于岗位匹配，不会公开</text>
+			</view>
 		</view>
 	</view>
 </template>
@@ -148,139 +128,152 @@ const goBack = () => {
 	box-sizing: border-box;
 	width: 100%;
 	min-height: 100vh;
-	padding: 36rpx 24rpx 40rpx;
-	background-color: #ffffff;
+	padding: 32rpx 0 calc(220rpx + env(safe-area-inset-bottom));
 
 	// ===== 顶部导航 =====
-	.header {
+	.appbar {
+		position: relative;
 		display: flex;
 		align-items: center;
-		padding-bottom: 16rpx;
+		box-sizing: border-box;
+		height: 88rpx;
+		padding: 0 40rpx;
 
-		.back-btn {
+		/* 返回：白色圆钮 + 描边箭头 */
+		.back {
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			flex-shrink: 0;
 			box-sizing: border-box;
-			width: 68rpx;
-			height: 68rpx;
+			width: 74rpx;
+			height: 74rpx;
 			background-color: #ffffff;
-			border: 2rpx solid #e8ecf3;
+			border: 2rpx solid #d8e2e3;
 			border-radius: 50%;
+
+			&::after {
+				content: '';
+				width: 18rpx;
+				height: 18rpx;
+				border-left: 3rpx solid #3d4b54;
+				border-bottom: 3rpx solid #3d4b54;
+				transform: rotate(45deg);
+			}
 		}
 
-		.back-icon {
-			width: 30rpx;
-			height: 30rpx;
-		}
-
-		.page-title {
-			margin-left: 16rpx;
-			font-size: 34rpx;
+		.appbar-title {
+			position: absolute;
+			left: 50%;
+			font-size: 30rpx;
 			font-weight: 600;
-			line-height: 1.1;
-			letter-spacing: 0.2rpx;
-			color: #0a0a0a;
+			line-height: 1;
+			letter-spacing: -0.4rpx;
+			color: #17252b;
+			transform: translateX(-50%);
 		}
 	}
 
-	.page-desc {
-		display: block;
-		margin-top: 12rpx;
-		font-size: 22rpx;
-		line-height: 1.3;
-		color: #8a8a91;
+	// ===== 表单纸 =====
+	.sheet {
+		box-sizing: border-box;
+		margin-top: 24rpx;
+		padding: 28rpx 40rpx 40rpx;
+		background-color: #ffffff;
+		border-radius: 44rpx 44rpx 0 0;
 	}
 
-	// ===== AI 提示 =====
-	.tip-card {
+	// ===== 引导提示 =====
+	.guide {
 		display: flex;
 		align-items: center;
 		box-sizing: border-box;
-		margin-top: 24rpx;
-		padding: 22rpx 24rpx;
-		background-color: #f6f6f8;
+		padding: 20rpx 28rpx;
+		background-color: #f1f9f7;
 		border-radius: 24rpx;
 
-		.tip-icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
+		.guide-icon {
+			position: relative;
 			flex-shrink: 0;
-			width: 64rpx;
-			height: 64rpx;
-			background-color: #0a0a0a;
+			box-sizing: border-box;
+			width: 28rpx;
+			height: 28rpx;
+			border: 2rpx solid #487c77;
 			border-radius: 50%;
+
+			&::after {
+				content: '';
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				width: 8rpx;
+				height: 8rpx;
+				margin: -4rpx 0 0 -4rpx;
+				background-color: #487c77;
+				border-radius: 50%;
+			}
 		}
 
-		.tip-icon-img {
-			width: 30rpx;
-			height: 30rpx;
-		}
-
-		.tip-text {
+		.guide-text {
 			min-width: 0;
-			margin-left: 18rpx;
+			margin-left: 16rpx;
 		}
 
-		.tip-title {
+		.guide-title {
 			display: block;
-			font-size: 27rpx;
+			font-size: 23rpx;
 			font-weight: 600;
-			line-height: 1.2;
-			color: #0a0a0a;
+			line-height: 1.3;
+			color: #17252b;
 		}
 
-		.tip-desc {
+		.guide-desc {
 			display: block;
-			margin-top: 8rpx;
+			margin-top: 4rpx;
 			font-size: 20rpx;
 			line-height: 1.3;
-			color: #8a8a91;
+			color: #65747c;
 		}
 	}
 
-	// ===== 分组标题 =====
-	.section-head {
-		margin: 34rpx 0 16rpx;
+	// ===== 分组 =====
+	.group {
+		margin-top: 44rpx;
 
-		.section-title {
-			font-size: 30rpx;
-			font-weight: 600;
-			line-height: 1.1;
-			color: #0a0a0a;
+		&:first-of-type {
+			margin-top: 36rpx;
 		}
 	}
 
-	// ===== 基本意向列表 =====
-	.list-card {
-		box-sizing: border-box;
-		padding: 0 24rpx;
-		background-color: #ffffff;
-		border: 2rpx solid #e8ecf3;
-		border-radius: 28rpx;
-		box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
-		overflow: hidden;
+	.group-label {
+		display: block;
+		font-size: 24rpx;
+		font-weight: 600;
+		line-height: 1.2;
+		letter-spacing: 0.4rpx;
+		color: #78868f;
+	}
 
-		.list-row {
-			display: flex;
-			align-items: center;
-			height: 108rpx;
-		}
+	.group-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+
+	.group-note {
+		font-size: 21rpx;
+		line-height: 1.2;
+		color: #8a979e;
+	}
+
+	// ===== 列表行 =====
+	.row {
+		display: flex;
+		align-items: center;
+		height: 112rpx;
 
 		.row-icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
 			flex-shrink: 0;
-			width: 64rpx;
-			height: 64rpx;
-			background-color: #f5f5f7;
-			border-radius: 50%;
-		}
-
-		.row-icon-img {
 			width: 30rpx;
 			height: 30rpx;
 		}
@@ -288,232 +281,247 @@ const goBack = () => {
 		.row-title {
 			flex: 1;
 			min-width: 0;
-			margin-left: 18rpx;
-			font-size: 28rpx;
-			font-weight: 500;
+			margin-left: 20rpx;
+			font-size: 27rpx;
 			line-height: 1.2;
-			color: #0a0a0a;
-		}
-
-		.row-right {
-			display: flex;
-			align-items: center;
-			flex-shrink: 0;
-			margin-left: 12rpx;
+			color: #3d4b54;
 		}
 
 		.row-value {
-			font-size: 22rpx;
-			line-height: 1;
-			color: #8a8a91;
+			flex-shrink: 0;
+			margin-left: 16rpx;
+			font-size: 25rpx;
+			font-weight: 500;
+			line-height: 1.2;
+			color: #3d4b54;
 		}
+	}
 
-		.row-divider {
-			height: 2rpx;
-			margin-left: 82rpx;
-			background-color: #f0f0f2;
+	.row-divider {
+		height: 2rpx;
+		margin-left: 50rpx;
+		background-color: #edf2f2;
+
+		&--full {
+			margin-left: 0;
 		}
 	}
 
 	// ===== 技术栈 =====
-	.stack-card {
-		box-sizing: border-box;
-		padding: 22rpx 24rpx 24rpx;
-		background-color: #ffffff;
-		border: 2rpx solid #e8ecf3;
-		border-radius: 28rpx;
-		box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
-
-		.stack-meta {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-
-			.stack-meta-text {
-				font-size: 20rpx;
-				line-height: 1;
-				color: #a8a8ae;
-			}
-		}
-
-		.stack-tags {
-			display: flex;
-			flex-wrap: wrap;
-			align-items: center;
-			column-gap: 12rpx;
-			row-gap: 14rpx;
-			margin-top: 18rpx;
-		}
+	.stack-tags {
+		display: flex;
+		flex-wrap: wrap;
+		column-gap: 12rpx;
+		row-gap: 14rpx;
+		margin-top: 18rpx;
 
 		.stack-tag {
 			display: flex;
 			align-items: center;
 			box-sizing: border-box;
-			height: 56rpx;
-			padding: 0 18rpx;
-			background-color: #f5f5f7;
-			border-radius: 28rpx;
-		}
+			height: 60rpx;
+			padding: 0 20rpx;
+			background-color: #f1f9f7;
+			border-radius: 14rpx;
 
-		.stack-tag-text {
-			font-size: 23rpx;
-			font-weight: 500;
-			line-height: 1;
-			color: #0a0a0a;
-		}
+			.stack-tag-text {
+				font-size: 23rpx;
+				line-height: 1;
+				color: #3d4b54;
+			}
 
-		.stack-tag-close {
-			width: 20rpx;
-			height: 20rpx;
-			margin-left: 10rpx;
-		}
+			/* 关闭：两条 45° 细线组成的叉 */
+			.stack-tag-close {
+				position: relative;
+				width: 16rpx;
+				height: 16rpx;
+				margin-left: 12rpx;
 
-		// 添加项：虚线描边 + 加号
-		.stack-tag--add {
-			background-color: #ffffff;
-			border: 2rpx dashed #dddde2;
-		}
+				&::before,
+				&::after {
+					content: '';
+					position: absolute;
+					top: 50%;
+					left: 0;
+					width: 16rpx;
+					height: 2rpx;
+					background-color: #7b8d89;
+					border-radius: 1rpx;
+				}
 
-		.stack-tag-plus {
-			width: 24rpx;
-			height: 24rpx;
-			margin-right: 8rpx;
+				&::before {
+					transform: rotate(45deg);
+				}
+
+				&::after {
+					transform: rotate(-45deg);
+				}
+			}
+		}
+	}
+
+	.stack-add {
+		display: flex;
+		align-items: center;
+		margin-top: 24rpx;
+
+		.stack-add-icon {
+			position: relative;
+			flex-shrink: 0;
+			box-sizing: border-box;
+			width: 48rpx;
+			height: 48rpx;
+			background-color: #f1f9f7;
+			border-radius: 50%;
+
+			.plus-line {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				background-color: #007c77;
+				border-radius: 1rpx;
+				transform: translate(-50%, -50%);
+
+				&--h {
+					width: 20rpx;
+					height: 2rpx;
+				}
+
+				&--v {
+					width: 2rpx;
+					height: 20rpx;
+				}
+			}
 		}
 
 		.stack-add-text {
-			font-size: 22rpx;
+			margin-left: 16rpx;
+			font-size: 25rpx;
+			font-weight: 500;
 			line-height: 1;
-			color: #8a8a91;
+			color: #007c77;
 		}
 
-		.stack-hint {
-			font-size: 19rpx;
+		.stack-add-note {
+			margin-left: auto;
+			font-size: 21rpx;
 			line-height: 1;
-			color: #a8a8ae;
+			color: #8a979e;
 		}
 	}
 
 	// ===== 薪资情况 =====
-	.salary-card {
+	.segmented {
+		display: flex;
 		box-sizing: border-box;
-		padding: 20rpx 24rpx 22rpx;
-		background-color: #ffffff;
-		border: 2rpx solid #e8ecf3;
-		border-radius: 28rpx;
-		box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
-
-		.salary-top {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding-bottom: 18rpx;
-			border-bottom: 2rpx solid #f0f0f2;
-		}
-
-		// 月薪 / 年薪分段控件：仅静态展示
-		.segmented {
-			display: flex;
-			box-sizing: border-box;
-			width: 216rpx;
-			height: 56rpx;
-			padding: 4rpx;
-			background-color: #f6f6f8;
-			border-radius: 14rpx;
-		}
+		width: 280rpx;
+		height: 68rpx;
+		margin-top: 18rpx;
+		padding: 6rpx;
+		background-color: #f2f7f6;
+		border-radius: 20rpx;
 
 		.segment {
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			flex: 1;
-			font-size: 21rpx;
+			font-size: 24rpx;
 			line-height: 1;
-			color: #8a8a91;
-			border-radius: 10rpx;
+			color: #78868f;
+			border-radius: 16rpx;
 		}
 
 		.segment--active {
 			font-weight: 600;
-			color: #0a0a0a;
+			color: #17252b;
 			background-color: #ffffff;
-			box-shadow: 0 2rpx 6rpx rgba(10, 10, 10, 0.1);
+			border: 2rpx solid #d8e4e3;
 		}
+	}
 
-		.tax-note {
-			font-size: 19rpx;
-			line-height: 1;
-			color: #a8a8ae;
-		}
+	.salary-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		height: 88rpx;
 
-		.salary-row {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			height: 88rpx;
-		}
-
-		.salary-row--divided {
-			border-top: 2rpx solid #f0f0f2;
+		&:first-of-type {
+			margin-top: 12rpx;
 		}
 
 		.salary-label {
-			font-size: 28rpx;
-			font-weight: 500;
+			font-size: 27rpx;
 			line-height: 1.2;
-			color: #0a0a0a;
+			color: #3d4b54;
 		}
 
 		.salary-value {
-			font-size: 25rpx;
+			font-size: 26rpx;
 			font-weight: 500;
 			line-height: 1.2;
-			color: #0a0a0a;
-		}
+			color: #3d4b54;
 
-		.salary-hint {
-			display: block;
-			padding-bottom: 2rpx;
-			font-size: 20rpx;
-			line-height: 1.3;
-			color: #a8a8ae;
+			&--accent {
+				font-weight: 600;
+				color: #007c77;
+			}
 		}
 	}
 
-	// ===== 保存按钮 =====
-	.save-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 88rpx;
-		margin-top: 32rpx;
-		background-color: #0a0a0a;
-		border-radius: 44rpx;
-
-		.save-text {
-			font-size: 27rpx;
-			font-weight: 600;
-			line-height: 1;
-			color: #ffffff;
-		}
+	.salary-hint {
+		display: block;
+		margin-top: 8rpx;
+		font-size: 21rpx;
+		line-height: 1.4;
+		color: #8a979e;
 	}
 
-	// ===== 隐私说明 =====
-	.privacy-note {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		margin-top: 26rpx;
+	// ===== 固定保存栏 =====
+	.save-bar {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		box-sizing: border-box;
+		padding: 24rpx 40rpx calc(24rpx + env(safe-area-inset-bottom));
+		background-color: #ffffff;
+		border-top: 2rpx solid #e3ebec;
 
-		.privacy-icon {
-			width: 24rpx;
-			height: 24rpx;
-			margin-right: 8rpx;
+		.save-btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 92rpx;
+			background-image: linear-gradient(180deg, #007c77 0%, #00746f 100%);
+			border-radius: 24rpx;
+
+			.save-text {
+				font-size: 30rpx;
+				font-weight: 600;
+				line-height: 1;
+				letter-spacing: 0.6rpx;
+				color: #ffffff;
+			}
 		}
 
-		.privacy-text {
-			font-size: 20rpx;
-			line-height: 1.2;
-			color: #a8a8ae;
+		.privacy-note {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin-top: 20rpx;
+
+			.privacy-icon {
+				width: 24rpx;
+				height: 24rpx;
+				margin-right: 10rpx;
+			}
+
+			.privacy-text {
+				font-size: 20rpx;
+				line-height: 1.2;
+				color: #8a979e;
+			}
 		}
 	}
 }

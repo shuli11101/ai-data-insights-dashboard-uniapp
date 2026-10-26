@@ -50,7 +50,6 @@ const onSearch = () => {
 	box-sizing: border-box;
 	min-height: 100vh;
 	padding: 0 24rpx;
-	background-color: #f8f8f8;
 
 	/* 搜索栏：与首页入口栏同高，跳转前后视觉不跳 */
 	.navbar {

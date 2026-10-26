@@ -27,9 +27,9 @@ const props = withDefaults(
 	{
 		items: () => [],
 		unit: '',
-		lineColor: '#0a0a0a',
-		areaFrom: 'rgba(10, 10, 10, 0.10)',
-		areaTo: 'rgba(10, 10, 10, 0)',
+		lineColor: '#007c77',
+		areaFrom: 'rgba(0, 124, 119, 0.16)',
+		areaTo: 'rgba(0, 124, 119, 0)',
 		lineWidth: 2
 	}
 )
@@ -67,24 +67,27 @@ const draw = () => {
 			// 纵轴上限向上取整到 4 的倍数，保证刻度是整数
 			const axisMax = Math.max(AXIS_SPLITS, Math.ceil(max / AXIS_SPLITS) * AXIS_SPLITS)
 
-			// 网格线与纵轴刻度
+			// 网格线与纵轴刻度：浅色虚线，避免抢走折线的视觉重心
 			ctx.setLineWidth(1)
 			ctx.setFontSize(9)
 			ctx.setTextAlign('right')
 			ctx.setTextBaseline('middle')
+			ctx.setStrokeStyle('#f0f2f1')
+			ctx.setLineDash([3, 4], 0)
 			for (let index = 0; index <= AXIS_SPLITS; index++) {
 				const y = paddingTop + (plotHeight / AXIS_SPLITS) * index
 				const tick = axisMax - (axisMax / AXIS_SPLITS) * index
 
 				ctx.beginPath()
-				ctx.setStrokeStyle('#eef1f5')
 				ctx.moveTo(paddingLeft, y)
 				ctx.lineTo(width - paddingRight, y)
 				ctx.stroke()
 
-				ctx.setFillStyle('#9ca3af')
+				ctx.setFillStyle('#c2c8c6')
 				ctx.fillText(`${tick}${props.unit}`, paddingLeft - 6, y)
 			}
+			// 网格画完恢复实线，折线与数据点保持实线描边
+			ctx.setLineDash([], 0)
 
 			// 数据点坐标：横轴等距分布，纵轴按占纵轴上限的比例定位
 			const points = props.items.map(({ value }, index) => ({
@@ -123,17 +126,15 @@ const draw = () => {
 			ctx.setLineJoin('round')
 			ctx.stroke()
 
-			// 数据点：白色描边圆 + 黑色实心，避免与面积重叠后看不清
+			// 数据点：白底圆 + 青色描边，与设计稿一致
 			points.forEach((point) => {
 				ctx.beginPath()
 				ctx.arc(point.x, point.y, 4, 0, Math.PI * 2)
 				ctx.setFillStyle('#ffffff')
 				ctx.fill()
-
-				ctx.beginPath()
-				ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2)
-				ctx.setFillStyle(props.lineColor)
-				ctx.fill()
+				ctx.setStrokeStyle(props.lineColor)
+				ctx.setLineWidth(2)
+				ctx.stroke()
 			})
 
 			// 数据点上方标注数值
@@ -147,7 +148,7 @@ const draw = () => {
 
 			// 横轴刻度：经验区间
 			ctx.setTextBaseline('top')
-			ctx.setFillStyle('#9ca3af')
+			ctx.setFillStyle('#a3a3a3')
 			ctx.setFontSize(9)
 			props.items.forEach(({ label }, index) => {
 				ctx.fillText(label, points[index].x, baseline + 7)

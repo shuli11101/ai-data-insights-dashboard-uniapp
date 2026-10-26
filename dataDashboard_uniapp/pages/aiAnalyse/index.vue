@@ -2,49 +2,52 @@
 	<view class="ai-analyse" :style="{ paddingTop: statusBarHeight + 'px' }">
 		<transition name="input" mode="out-in">
 			<view v-if="!hasResult && !restoring" class="input-stage">
-				<!-- ===== 顶部控制区：返回按钮 + Work / Code 分段切换 ===== -->
+				<!-- ===== 顶部控制区：返回 + 标题 + 历史 ===== -->
 				<view class="top-controls">
-					<image class="back-btn" src="/static/icon/aiAnalyse/back.svg" mode="aspectFit" @click="onBack" />
+					<view class="back" @click="onBack"></view>
+					<text class="top-title">AI 分析</text>
+					<text class="history" @click="goHistory">历史</text>
 				</view>
 
 				<!-- ===== 问候语 ===== -->
 				<view class="greeting">
-					<view v-if="title === '技术栈评估'" class="greeting-card">
-						<text class="greeting-hello">Hey 你好</text>
-						<text class="greeting-title">今天想评估</text>
-						<text class="greeting-title">什么技术栈？</text>
-					</view>
-					<view v-else class="greeting-card">
-						<text class="greeting-hello">Hey 你好</text>
-						<text class="greeting-title">看到了</text>
-						<text class="greeting-title">喜欢的岗位？</text>
-					</view>
+					<text class="greeting-title">{{ title === '技术栈评估' ? '今天想评估什么技术栈？' : '看到了喜欢的岗位？' }}</text>
+					<text class="greeting-desc">岗位匹配、技能差距、面试准备，都可以聊。</text>
 				</view>
 
 				<!-- ===== 快捷建议 ===== -->
 				<view class="suggestions">
+					<text class="suggestions-label">可以这样开始</text>
 					<view class="chip" v-for="item in suggestions" :key="item.text" @click="navigateTo(item)">
-						<image class="chip-icon" :class="'chip-icon--' + item.type" :src="item.icon" mode="aspectFit" />
-						<text class="chip-text">{{ item.text }}</text>
+						<view class="chip-icon-wrap">
+							<image class="chip-icon" :class="'chip-icon--' + item.type" :src="item.icon"
+								mode="aspectFit" />
+						</view>
+						<view class="chip-texts">
+							<text class="chip-title">{{ item.text }}</text>
+							<text class="chip-desc">{{ item.desc }}</text>
+						</view>
+						<view class="chip-chevron"></view>
 					</view>
 				</view>
 
 				<!-- ===== 底部输入区 ===== -->
 				<view class="composer">
-					<input class="composer-input" v-model="message" type="text" placeholder="发消息或按住说话..." confirm-type="send"
-						placeholder-class="composer-placeholder" @confirm="sendMessage" />
+					<view class="composer-box">
+						<input class="composer-input" v-model="message" type="text" placeholder="发消息或按住说话…"
+							confirm-type="send" placeholder-class="composer-placeholder" @confirm="sendMessage" />
+					</view>
 					<view class="composer-row">
-						<view class="row-left">
-							<view class="icon-btn">
-								<image class="icon-btn-icon icon-btn-icon--plus" src="/static/icon/aiAnalyse/plus.svg"
-									mode="aspectFit" />
-							</view>
+						<view class="icon-btn">
+							<image class="icon-btn-icon icon-btn-icon--plus" src="/static/icon/aiAnalyse/plus.svg"
+								mode="aspectFit" />
 						</view>
 
 						<!-- 输入框右下2个按钮 之后可选择上传简历 -->
 						<view class="row-right">
 							<view class="icon-btn">
-								<image class="icon-btn-icon icon-btn-icon--mic" src="/static/icon/aiAnalyse/mic.svg" mode="aspectFit" />
+								<image class="icon-btn-icon icon-btn-icon--mic" src="/static/icon/aiAnalyse/mic.svg"
+									mode="aspectFit" />
 							</view>
 							<view class="icon-btn icon-btn--send" @click="sendMessage()">
 								<image class="icon-btn-icon icon-btn-icon--send" src="/static/icon/aiAnalyse/send.svg"
@@ -64,7 +67,8 @@
 					:salaryRange="salaryRange" :targetJob="targetJob" :salaryMedian="salaryMedian"
 					:coreAdvantages="coreAdvantages" :skillGaps="skillGaps" :jobAdvice="jobAdvice" @goBack="goBack" />
 			</view>
-			<view v-else-if="hasResult && title === 'JD 匹配'" class="result-stage" :style="{ top: statusBarHeight + 'px' }">
+			<view v-else-if="hasResult && title === 'JD 匹配'" class="result-stage"
+				:style="{ top: statusBarHeight + 'px' }">
 				<JdPanel :jdBasicInfo="jdBasicInfo" :jdDuties="jdDuties" :knowledgeRequirements="knowledgeRequirements"
 					:jdInterviewPrep="jdInterviewPrep" :jdHiddenInfo="jdHiddenInfo" @goBack="goBack" />
 			</view>
@@ -107,6 +111,7 @@ const message = ref('')
 
 interface Suggestion {
 	text: string
+	desc: string
 	icon: string
 	type: 'remote' | 'research' | 'mining' | 'inspiration'
 	scene: 'skill' | 'jd'
@@ -114,8 +119,20 @@ interface Suggestion {
 
 // 快捷建议：图标为从 Figma 导出的真实 SVG
 const suggestions: Suggestion[] = [
-	{ text: '进行技术栈分析', icon: '/static/icon/aiAnalyse/remote-control.svg', type: 'remote', scene: 'skill' },
-	{ text: '进行jd分析', icon: '/static/icon/aiAnalyse/research.svg', type: 'research', scene: 'jd' },
+	{
+		text: '技术栈分析',
+		desc: '看看技能与目标岗位的距离',
+		icon: '/static/icon/aiAnalyse/remote-control.svg',
+		type: 'remote',
+		scene: 'skill'
+	},
+	{
+		text: 'JD 分析',
+		desc: '粘贴岗位描述，拆解优势与差距',
+		icon: '/static/icon/aiAnalyse/research.svg',
+		type: 'research',
+		scene: 'jd'
+	},
 ]
 
 const navigateTo = (item: Suggestion) => {
@@ -293,13 +310,18 @@ const onBack = () => {
 	}
 }
 
+// 历史：切到会话列表 tab
+const goHistory = () => {
+	uni.switchTab({ url: '/pages/aiAnalyseHome/index' })
+}
+
 </script>
 
 <style lang="scss">
 /* 输入框占位符：placeholder-class 需为独立类名，不能嵌套在页面根类里 */
 .composer-placeholder {
-	font-size: 30rpx;
-	color: #b5b5b5;
+	font-size: 26rpx;
+	color: #97a4aa;
 }
 
 .ai-analyse {
@@ -309,7 +331,6 @@ const onBack = () => {
 	flex-direction: column;
 	height: 100vh;
 	padding: 36rpx 31rpx 40rpx;
-	background-color: #f4f4f4;
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
 	/* 自定义顶部提示：固定顶部居中，深色胶囊 + 轻投影 */
@@ -394,81 +415,58 @@ const onBack = () => {
 		position: relative;
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		height: 84rpx;
-		margin-top: 25rpx;
+		justify-content: space-between;
+		height: 88rpx;
+		margin-top: 8rpx;
 
-		.back-btn {
-			position: absolute;
-			left: 0;
-			width: 64rpx;
-			height: 64rpx;
+		/* 返回箭头：左 + 下描边旋转 45°，指向左侧 */
+		.back {
+			flex-shrink: 0;
+			width: 20rpx;
+			height: 20rpx;
+			border-left: 3rpx solid #3d4b54;
+			border-bottom: 3rpx solid #3d4b54;
+			transform: rotate(45deg);
 		}
 
-		/* 分段控件：172×40，胶囊轨道，内缩 3px 作为选中块留白 */
-		.segmented {
-			display: flex;
-			box-sizing: border-box;
-			width: 328rpx;
-			height: 76rpx;
-			padding: 6rpx;
-			background-color: #e9e9e9;
-			border-radius: 999rpx;
+		.top-title {
+			position: absolute;
+			left: 50%;
+			font-size: 29rpx;
+			font-weight: 600;
+			line-height: 1;
+			letter-spacing: -0.4rpx;
+			color: #3d4b54;
+			transform: translateX(-50%);
+		}
 
-			.segmented-item {
-				display: flex;
-				flex: 1;
-				align-items: center;
-				justify-content: center;
-				border-radius: 999rpx;
-
-				&.active {
-					background-color: #ffffff;
-
-					.segmented-text {
-						font-weight: 700;
-						color: #111111;
-					}
-				}
-			}
-
-			.segmented-text {
-				font-size: 30rpx;
-				line-height: 1;
-				color: #8a8a8e;
-			}
+		.history {
+			flex-shrink: 0;
+			font-size: 24rpx;
+			line-height: 1;
+			color: #65747c;
 		}
 	}
 
-	/* ===== 问候语（白卡 + 品牌色胶囊问候） ===== */
+	/* ===== 问候语 ===== */
 	.greeting {
-		margin-top: 200rpx;
+		margin-top: 160rpx;
 
-		.greeting-card {
-			box-sizing: border-box;
-			padding: 48rpx 44rpx;
+		.greeting-title {
+			display: block;
+			font-size: 58rpx;
+			font-weight: 700;
+			line-height: 1.3;
+			letter-spacing: -2rpx;
+			color: #17252b;
+		}
 
-			.greeting-hello {
-				display: inline-block;
-				box-sizing: border-box;
-				padding: 14rpx 28rpx;
-				margin-bottom: 40rpx;
-				background-color: #efedff;
-				border-radius: 999rpx;
-				font-size: 30rpx;
-				font-weight: 600;
-				line-height: 1;
-				color: #4f46f0;
-			}
-
-			.greeting-title {
-				display: block;
-				font-size: 62rpx;
-				font-weight: 800;
-				line-height: 1.3;
-				letter-spacing: 1rpx;
-				color: #111111;
-			}
+		.greeting-desc {
+			display: block;
+			margin-top: 16rpx;
+			font-size: 25rpx;
+			line-height: 1.45;
+			color: #65747c;
 		}
 	}
 
@@ -476,102 +474,154 @@ const onBack = () => {
 	.suggestions {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		gap: 15rpx;
+		gap: 16rpx;
 		margin-top: auto;
-		padding-top: 40rpx;
+		padding: 40rpx 0 8rpx;
+
+		.suggestions-label {
+			margin-bottom: 4rpx;
+			font-size: 21rpx;
+			line-height: 1.2;
+			color: #8a979e;
+		}
 
 		.chip {
 			display: flex;
 			align-items: center;
 			box-sizing: border-box;
-			height: 59rpx;
-			padding: 0 24rpx;
-			background-color: #fcfcfc;
-			border: 2rpx solid #e6e6e6;
-			border-radius: 23rpx;
+			height: 116rpx;
+			padding: 0 28rpx;
+			background-color: #ffffff;
+			border: 2rpx solid #dde8e7;
+			border-radius: 24rpx;
 
-			.chip-text {
-				font-size: 25rpx;
-				line-height: 1;
-				color: #1f1f1f;
+			.chip-icon-wrap {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				width: 44rpx;
+				height: 44rpx;
 			}
 
 			/* 各芯片图标按设计稿实际尺寸单独设置 */
 			.chip-icon {
-				margin-right: 17rpx;
-
 				&--remote {
-					width: 25rpx;
-					height: 22rpx;
+					width: 30rpx;
+					height: 26rpx;
 				}
 
 				&--research {
-					width: 23rpx;
-					height: 23rpx;
+					width: 26rpx;
+					height: 28rpx;
 				}
+			}
+
+			.chip-texts {
+				flex: 1;
+				min-width: 0;
+				margin-left: 18rpx;
+			}
+
+			.chip-title {
+				display: block;
+				font-size: 27rpx;
+				font-weight: 600;
+				line-height: 1.2;
+				color: #17252b;
+			}
+
+			.chip-desc {
+				display: block;
+				margin-top: 6rpx;
+				font-size: 21rpx;
+				line-height: 1.2;
+				color: #8a979e;
+			}
+
+			.chip-chevron {
+				flex-shrink: 0;
+				width: 12rpx;
+				height: 12rpx;
+				margin-left: 16rpx;
+				border-top: 2rpx solid #9aa6ac;
+				border-right: 2rpx solid #9aa6ac;
+				transform: rotate(45deg);
 			}
 		}
 	}
 
-	/* ===== 底部输入区 ===== */
+	/* ===== 底部输入区：通栏白底，左右贴屏幕边缘 ===== */
 	.composer {
+		flex-shrink: 0;
 		box-sizing: border-box;
-		height: 191rpx;
-		margin-top: 18rpx;
-		padding: 31rpx 19rpx 0;
+		margin: 18rpx -31rpx -40rpx;
+		padding: 32rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
 		background-color: #ffffff;
-		border-radius: 50rpx;
+		border-top: 2rpx solid #e3ebec;
+
+		/* 输入框：浅底细描边，贴合设计稿的圆角矩形 */
+		.composer-box {
+			display: flex;
+			align-items: center;
+			box-sizing: border-box;
+			height: 88rpx;
+			padding: 0 24rpx;
+			background-color: #f5f8f7;
+			border: 2rpx solid #e2eaea;
+			border-radius: 24rpx;
+		}
 
 		.composer-input {
-			height: 36rpx;
-			font-size: 30rpx;
-			line-height: 36rpx;
-			color: #1f1f1f;
-			margin-left: 16rpx;
+			flex: 1;
+			min-width: 0;
+			height: 100%;
+			font-size: 26rpx;
+			color: #17252b;
 		}
 
 		.composer-row {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			margin-top: 29rpx;
+			margin-top: 20rpx;
 
-			.row-left,
 			.row-right {
 				display: flex;
 				align-items: center;
-				gap: 19rpx;
+				gap: 20rpx;
 			}
 
 			.icon-btn {
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				width: 65rpx;
-				height: 65rpx;
-				background-color: #f0f0f0;
+				width: 68rpx;
+				height: 68rpx;
+				background-color: #f1f7f5;
 				border-radius: 50%;
 
 				&--send {
-					background-color: #4f46f0;
+					width: 72rpx;
+					height: 72rpx;
+					background-image: linear-gradient(180deg, #007c77 0%, #00746f 100%);
 				}
 			}
 
 			.icon-btn-icon {
 				&--plus {
-					width: 20rpx;
-					height: 20rpx;
-				}
-
-				&--mic {
-					width: 18rpx;
+					width: 26rpx;
 					height: 26rpx;
 				}
 
+				&--mic {
+					width: 24rpx;
+					height: 32rpx;
+				}
+
 				&--send {
-					width: 38rpx;
-					height: 38rpx;
+					width: 36rpx;
+					height: 36rpx;
 				}
 			}
 
@@ -581,13 +631,13 @@ const onBack = () => {
 				justify-content: center;
 				width: 263rpx;
 				height: 65rpx;
-				background-color: #f0f0f0;
+				background-color: #f1f7f5;
 				border-radius: 33rpx;
 
 				.model-pill-text {
 					font-size: 25rpx;
 					line-height: 1;
-					color: #2a2a2a;
+					color: #3d4b54;
 				}
 			}
 		}

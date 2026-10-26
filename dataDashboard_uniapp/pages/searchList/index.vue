@@ -531,7 +531,6 @@ onReachBottom(() => {
 	box-sizing: border-box;
 	min-height: 100vh;
 	padding: 0 40rpx 40rpx;
-	background-color: #ffffff;
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
 	/* ===== 顶部：返回 + 搜索框 ===== */

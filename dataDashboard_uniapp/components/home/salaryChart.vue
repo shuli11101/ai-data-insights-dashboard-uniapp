@@ -34,27 +34,26 @@ withDefaults(
 	flex-direction: column;
 	box-sizing: border-box;
 	width: 100%;
-	height: 288rpx;
-	padding: 26rpx 28rpx 18rpx;
+	height: 392rpx;
+	padding: 32rpx 32rpx 24rpx;
 	background-color: #ffffff;
-	border: 2rpx solid #e8ecf3;
-	border-radius: 28rpx;
-	box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
+	border: 2rpx solid #e9eeec;
+	border-radius: 32rpx;
 
 	.salary-title {
 		display: block;
-		font-size: 30rpx;
-		font-weight: 600;
+		font-size: 32rpx;
+		font-weight: 700;
 		line-height: 1.15;
 		color: #0a0a0a;
 	}
 
 	.salary-subtitle {
 		display: block;
-		margin-top: 6rpx;
-		font-size: 20rpx;
+		margin-top: 8rpx;
+		font-size: 22rpx;
 		line-height: 1.2;
-		color: #9ca3af;
+		color: #a3a3a3;
 	}
 
 	// 柱区：等分若干列，整体贴着卡片底部
@@ -62,7 +61,7 @@ withDefaults(
 		display: flex;
 		flex: 1;
 		align-items: flex-end;
-		margin-top: 12rpx;
+		margin-top: 20rpx;
 
 		.bar-col {
 			display: flex;
@@ -78,22 +77,21 @@ withDefaults(
 			align-items: flex-end;
 			justify-content: center;
 			width: 100%;
-			height: 112rpx;
-			margin-top: 8rpx;
+			height: 200rpx;
 		}
 
 		.bar {
-			width: 40rpx;
-			background-color: #0a0a0a;
+			width: 32rpx;
+			background-color: #007c77;
 			border-radius: 8rpx 8rpx 0 0;
 		}
 
 		// 区间刻度
 		.bar-label {
-			margin-top: 8rpx;
-			font-size: 19rpx;
+			margin-top: 12rpx;
+			font-size: 20rpx;
 			line-height: 1;
-			color: #9ca3af;
+			color: #a3a3a3;
 			white-space: nowrap;
 		}
 	}

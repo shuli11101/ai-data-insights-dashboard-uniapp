@@ -35,27 +35,26 @@ withDefaults(
 	flex-direction: column;
 	box-sizing: border-box;
 	width: 100%;
-	height: 288rpx;
-	padding: 26rpx 28rpx 20rpx;
+	height: 392rpx;
+	padding: 32rpx 32rpx 28rpx;
 	background-color: #ffffff;
-	border: 2rpx solid #e8ecf3;
-	border-radius: 28rpx;
-	box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
+	border: 2rpx solid #e9eeec;
+	border-radius: 32rpx;
 
 	.skill-title {
 		display: block;
-		font-size: 30rpx;
-		font-weight: 600;
+		font-size: 32rpx;
+		font-weight: 700;
 		line-height: 1.15;
 		color: #0a0a0a;
 	}
 
 	.skill-subtitle {
 		display: block;
-		margin-top: 6rpx;
-		font-size: 20rpx;
+		margin-top: 8rpx;
+		font-size: 22rpx;
 		line-height: 1.2;
-		color: #9ca3af;
+		color: #a3a3a3;
 	}
 
 	// 条形区：6 行等距铺满剩余高度
@@ -64,7 +63,7 @@ withDefaults(
 		flex: 1;
 		flex-direction: column;
 		justify-content: space-between;
-		margin-top: 12rpx;
+		margin-top: 20rpx;
 	}
 
 	.skill-row {
@@ -76,41 +75,41 @@ withDefaults(
 	.skill-name {
 		flex-shrink: 0;
 		box-sizing: border-box;
-		width: 120rpx;
+		width: 130rpx;
 		padding-right: 10rpx;
-		font-size: 20rpx;
+		font-size: 21rpx;
 		line-height: 1;
-		color: #525b69;
+		color: #6b7280;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
 
-	// 轨道：浅灰底 + 黑色填充，百分比跟在填充末端
+	// 轨道：浅灰底 + 青色填充，百分比跟在填充末端
 	.skill-track {
 		display: flex;
 		align-items: center;
 		flex: 1;
 		min-width: 0;
-		height: 22rpx;
-		background-color: #f2f6fb;
+		height: 24rpx;
+		background-color: #f5f5f5;
 		border-radius: 999rpx;
 	}
 
 	// 百分比文案放不下时，靠 flex 收缩让出宽度，条形不会顶出轨道
 	.skill-fill {
 		height: 100%;
-		background-color: #0a0a0a;
+		background-color: #007c77;
 		border-radius: 999rpx;
 	}
 
 	.skill-percent {
 		flex-shrink: 0;
 		margin-left: 8rpx;
-		font-size: 18rpx;
+		font-size: 19rpx;
 		font-weight: 600;
 		line-height: 1;
-		color: #0a0a0a;
+		color: #737373;
 	}
 }
 </style>

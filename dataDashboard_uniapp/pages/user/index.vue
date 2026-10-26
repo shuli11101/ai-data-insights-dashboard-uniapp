@@ -1,6 +1,6 @@
 <template>
 	<view class="user-page">
-		<!-- ===== 顶部标题 ===== -->
+		<!-- ===== 页头：标题 + 设置入口 ===== -->
 		<view class="header" :style="{ paddingTop: statusBarHeight + 'px' }">
 			<view class="header-text">
 				<text class="page-title">个人中心</text>
@@ -8,20 +8,15 @@
 			</view>
 
 			<view @click="navigateToSettings" class="settings-btn">
-				<image class="settings-icon" src="/static/icon/user/settings-white.svg" mode="aspectFit" />
+				<image class="settings-icon" src="/static/icon/user/settings.svg" mode="aspectFit" />
 			</view>
 		</view>
 
 		<!-- ===== 资料卡 ===== -->
 		<view class="profile-card">
 			<view class="profile-top">
-				<view class="avatar-wrap">
-					<view class="avatar">
-						<text class="avatar-text">陈</text>
-					</view>
-					<view class="avatar-badge">
-						<image class="avatar-badge-icon" src="/static/icon/user/camera-white.svg" mode="aspectFit" />
-					</view>
+				<view class="avatar">
+					<text class="avatar-text">陈</text>
 				</view>
 
 				<view class="profile-info">
@@ -48,46 +43,50 @@
 				</view>
 				<view class="stat-divider"></view>
 				<view class="stat">
-					<text class="stat-value">84<text class="stat-unit">%</text></text>
+					<text class="stat-value stat-value--accent">84<text class="stat-unit">%</text></text>
 					<text class="stat-label">平均匹配</text>
 				</view>
 				<view class="stat-divider"></view>
 				<view class="stat">
 					<text class="stat-value">8</text>
-					<text class="stat-label">收藏岗位</text>
+					<text class="stat-label">收藏职位</text>
 				</view>
 			</view>
 		</view>
 
-		<!-- ===== 快捷操作 ===== -->
+		<!-- ===== 快捷入口 ===== -->
 		<view class="quick-actions">
-			<view class="action-card">
+			<view class="action">
 				<view class="action-icon">
 					<image class="action-icon-img" src="/static/icon/user/edit.svg" mode="aspectFit" />
 				</view>
-				<text class="action-title">编辑资料（待开发）</text>
-				<text class="action-desc">头像、昵称与通知、外观</text>
+				<view class="action-text">
+					<text class="action-title">编辑资料</text>
+					<text class="action-desc">头像、昵称与联系方式</text>
+				</view>
 			</view>
 
-			<view @click="navigateToPersonal" class="action-card">
+			<view class="action-divider"></view>
+
+			<view @click="navigateToPersonal" class="action">
 				<view class="action-icon">
 					<image class="action-icon-img" src="/static/icon/user/sliders.svg" mode="aspectFit" />
 				</view>
-				<text class="action-title">偏好设置</text>
-				<text class="action-desc">求职意向与个人信息</text>
+				<view class="action-text">
+					<text class="action-title">偏好设置</text>
+					<text class="action-desc">求职意向与个人信息</text>
+				</view>
 			</view>
 		</view>
 
 		<!-- ===== 设置 ===== -->
 		<view class="section-head">
-			<text class="section-title">设置（待开发）</text>
+			<text class="section-title">设置</text>
 		</view>
 
 		<view class="list-card">
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/bell.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/bell.svg" mode="aspectFit" />
 				<text class="row-title">通知提醒</text>
 				<view class="toggle toggle--on">
 					<view class="toggle-knob"></view>
@@ -97,9 +96,7 @@
 			<view class="row-divider"></view>
 
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/moon.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/moon.svg" mode="aspectFit" />
 				<text class="row-title">深色模式</text>
 				<view class="toggle">
 					<view class="toggle-knob"></view>
@@ -109,9 +106,7 @@
 			<view class="row-divider"></view>
 
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/globe.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/globe.svg" mode="aspectFit" />
 				<text class="row-title">语言</text>
 				<view class="row-right">
 					<text class="row-value">简体中文</text>
@@ -122,9 +117,7 @@
 			<view class="row-divider"></view>
 
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/trash.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/trash.svg" mode="aspectFit" />
 				<text class="row-title">清除缓存</text>
 				<view class="row-right">
 					<text class="row-value">18.6 MB</text>
@@ -140,22 +133,16 @@
 
 		<view class="list-card">
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/info.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/info.svg" mode="aspectFit" />
 				<text class="row-title">版本</text>
-				<view class="row-right">
-					<text class="row-value">1.4.2</text>
-				</view>
+				<text class="row-value">1.4.2</text>
 			</view>
 
 			<view class="row-divider"></view>
 
 			<view class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/document.svg" mode="aspectFit" />
-				</view>
-				<text class="row-title">用户协议与隐私（待开发）</text>
+				<image class="row-icon" src="/static/icon/user/document.svg" mode="aspectFit" />
+				<text class="row-title">用户协议与隐私</text>
 				<view class="row-right">
 					<view class="chevron"></view>
 				</view>
@@ -164,9 +151,7 @@
 			<view class="row-divider"></view>
 
 			<view @click="navigateToAbout" class="list-row">
-				<view class="row-icon">
-					<image class="row-icon-img" src="/static/icon/user/sparkles.svg" mode="aspectFit" />
-				</view>
+				<image class="row-icon" src="/static/icon/user/sparkles.svg" mode="aspectFit" />
 				<text class="row-title">关于我们</text>
 				<view class="row-right">
 					<view class="chevron"></view>
@@ -174,19 +159,17 @@
 			</view>
 		</view>
 
-		<!-- 隐私说明 -->
+		<!-- ===== 隐私说明 ===== -->
 		<view class="privacy-note">
 			<image class="privacy-icon" src="/static/icon/user/lock.svg" mode="aspectFit" />
-			<text class="privacy-text">资料仅保存在本机，仅用于匹配分析</text>
+			<text class="privacy-text">账号信息仅用于求职分析与服务</text>
 		</view>
 	</view>
 </template>
 
 <script setup lang="ts">
-
 // 自定义导航栏需自行避开状态栏
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
-
 
 // 跳转偏好设置
 const navigateToPersonal = () => {
@@ -215,125 +198,97 @@ const navigateToAbout = () => {
 	box-sizing: border-box;
 	width: 100%;
 	min-height: 100vh;
-	padding: 36rpx 24rpx 40rpx;
-	background-color: #ffffff;
+	padding: 24rpx 40rpx 160rpx;
 
-	// ===== 顶部标题 =====
+	// ===== 页头 =====
 	.header {
 		display: flex;
 		align-items: flex-start;
 		justify-content: space-between;
-		padding-bottom: 48rpx;
+		padding-bottom: 40rpx;
 
 		.header-text {
 			min-width: 0;
-			padding-top: 12rpx;
 		}
 
 		.page-title {
 			display: block;
-			font-size: 44rpx;
+			font-size: 54rpx;
 			font-weight: 700;
 			line-height: 1.1;
-			letter-spacing: 0.2rpx;
-			color: #0a0a0a;
+			letter-spacing: -1.8rpx;
+			color: #17252b;
 		}
 
 		.page-subtitle {
 			display: block;
-			margin-top: 8rpx;
-			font-size: 22rpx;
+			margin-top: 10rpx;
+			font-size: 23rpx;
 			line-height: 1.2;
-			color: #8a8a91;
+			color: #65747c;
 		}
 
-		// 设置入口：黑色圆形按钮
+		// 设置入口：白色描边圆钮
 		.settings-btn {
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			flex-shrink: 0;
-			width: 72rpx;
-			height: 72rpx;
-			margin-top: 8rpx;
-			background-color: #0a0a0a;
+			box-sizing: border-box;
+			width: 74rpx;
+			height: 74rpx;
+			background-color: #ffffff;
+			border: 2rpx solid #d8e2e3;
 			border-radius: 50%;
-			box-shadow: 0 8rpx 18rpx rgba(10, 10, 10, 0.18);
 		}
 
 		.settings-icon {
-			width: 34rpx;
-			height: 34rpx;
+			width: 32rpx;
+			height: 32rpx;
 		}
 	}
 
 	// ===== 资料卡 =====
 	.profile-card {
 		box-sizing: border-box;
-		padding: 28rpx;
+		padding: 36rpx 32rpx 0;
 		background-color: #ffffff;
-		border: 2rpx solid #e8ecf3;
-		border-radius: 28rpx;
-		box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
+		border: 2rpx solid #e3ebec;
+		border-radius: 32rpx;
 
 		.profile-top {
 			display: flex;
 			align-items: flex-start;
+			box-sizing: border-box;
+			padding-bottom: 36rpx;
 		}
 
-		.avatar-wrap {
-			position: relative;
-			flex-shrink: 0;
-			width: 120rpx;
-			height: 120rpx;
-		}
-
-		// 头像：浅米色底 + 姓名首字，避免依赖网络图片
+		// 头像：浅青底 + 姓名首字
 		.avatar {
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			flex-shrink: 0;
 			box-sizing: border-box;
-			width: 120rpx;
-			height: 120rpx;
-			background-color: #ede7de;
-			border: 2rpx solid rgba(10, 10, 10, 0.06);
+			width: 116rpx;
+			height: 116rpx;
+			background-color: #e8f7f4;
+			border: 2rpx solid #d3eae6;
 			border-radius: 50%;
 
 			.avatar-text {
 				font-size: 46rpx;
 				font-weight: 600;
 				line-height: 1;
-				color: #2a2320;
+				color: #007c77;
 			}
-		}
-
-		// 相机角标
-		.avatar-badge {
-			position: absolute;
-			right: -4rpx;
-			bottom: -4rpx;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			box-sizing: border-box;
-			width: 44rpx;
-			height: 44rpx;
-			background-color: #0a0a0a;
-			border: 4rpx solid #ffffff;
-			border-radius: 50%;
-		}
-
-		.avatar-badge-icon {
-			width: 22rpx;
-			height: 22rpx;
 		}
 
 		.profile-info {
 			flex: 1;
 			min-width: 0;
-			margin-left: 22rpx;
-			padding-top: 8rpx;
+			margin-left: 28rpx;
+			padding-top: 6rpx;
 		}
 
 		.name-row {
@@ -345,24 +300,25 @@ const navigateToAbout = () => {
 			font-size: 40rpx;
 			font-weight: 700;
 			line-height: 1.1;
-			letter-spacing: 0.2rpx;
-			color: #0a0a0a;
+			letter-spacing: -0.8rpx;
+			color: #17252b;
 		}
 
+		// 求职状态胶囊
 		.status-pill {
 			display: flex;
 			align-items: center;
 			flex-shrink: 0;
-			height: 36rpx;
+			height: 38rpx;
 			margin-left: 14rpx;
-			padding: 0 14rpx;
-			background-color: #f5f5f7;
-			border-radius: 18rpx;
+			padding: 0 16rpx;
+			background-color: #e8f7f4;
+			border-radius: 19rpx;
 
 			.status-dot {
 				width: 8rpx;
 				height: 8rpx;
-				background-color: #0a0a0a;
+				background-color: #00b7ad;
 				border-radius: 50%;
 			}
 
@@ -371,16 +327,16 @@ const navigateToAbout = () => {
 				font-size: 19rpx;
 				font-weight: 500;
 				line-height: 1;
-				color: #0a0a0a;
+				color: #007c77;
 			}
 		}
 
 		.profile-meta {
 			display: block;
 			margin-top: 12rpx;
-			font-size: 21rpx;
+			font-size: 23rpx;
 			line-height: 1.2;
-			color: #8a8a91;
+			color: #65747c;
 		}
 
 		// 编辑胶囊
@@ -390,41 +346,32 @@ const navigateToAbout = () => {
 			flex-shrink: 0;
 			box-sizing: border-box;
 			height: 56rpx;
-			margin-top: 10rpx;
-			margin-left: 12rpx;
+			margin-left: 16rpx;
 			padding: 0 18rpx;
-			background-color: #ffffff;
-			border: 2rpx solid #e9e9ee;
-			border-radius: 28rpx;
+			background-color: #f8fbfa;
+			border: 2rpx solid #dce7e6;
+			border-radius: 16rpx;
 		}
 
 		.edit-icon {
-			width: 26rpx;
-			height: 26rpx;
+			width: 24rpx;
+			height: 24rpx;
 		}
 
 		.edit-text {
 			margin-left: 8rpx;
-			font-size: 22rpx;
+			font-size: 23rpx;
 			font-weight: 500;
 			line-height: 1;
-			color: #0a0a0a;
+			color: #3d4b54;
 		}
 
-		.bio {
-			display: block;
-			margin-top: 24rpx;
-			font-size: 22rpx;
-			line-height: 1.5;
-			color: #8a8a91;
-		}
-
+		// 数据统计
 		.stats {
 			display: flex;
 			align-items: center;
-			margin-top: 24rpx;
-			padding-top: 24rpx;
-			border-top: 2rpx solid #ededf0;
+			padding: 26rpx 0 30rpx;
+			border-top: 2rpx solid #e9eff0;
 		}
 
 		.stat {
@@ -437,58 +384,63 @@ const navigateToAbout = () => {
 
 		.stat-divider {
 			width: 2rpx;
-			height: 56rpx;
-			background-color: #ededf0;
+			height: 58rpx;
+			background-color: #e9eff0;
 		}
 
 		.stat-value {
-			font-size: 38rpx;
+			font-size: 42rpx;
 			font-weight: 700;
 			line-height: 1.1;
-			letter-spacing: 0.2rpx;
-			color: #0a0a0a;
+			letter-spacing: -0.4rpx;
+			color: #17252b;
+
+			&--accent {
+				color: #007c77;
+			}
 		}
 
 		.stat-unit {
 			font-size: 24rpx;
 			font-weight: 600;
-			color: #8a8a91;
 		}
 
 		.stat-label {
-			margin-top: 10rpx;
-			font-size: 20rpx;
+			margin-top: 12rpx;
+			font-size: 21rpx;
 			line-height: 1.2;
-			color: #a8a8ae;
+			color: #78868f;
 		}
 	}
 
-	// ===== 快捷操作 =====
+	// ===== 快捷入口 =====
 	.quick-actions {
 		display: flex;
-		justify-content: space-between;
-		margin-top: 24rpx;
+		align-items: center;
+		box-sizing: border-box;
+		height: 157rpx;
+		margin-top: 30rpx;
+		background-color: #ffffff;
+		border: 2rpx solid #e3ebec;
+		border-radius: 28rpx;
 
-		.action-card {
+		.action {
 			display: flex;
-			flex-direction: column;
-			box-sizing: border-box;
-			width: 48.5%;
-			padding: 24rpx;
-			background-color: #ffffff;
-			border: 2rpx solid #e8ecf3;
-			border-radius: 24rpx;
-			box-shadow: 0 4rpx 16rpx rgba(15, 23, 42, 0.03);
+			align-items: center;
+			flex: 1;
+			min-width: 0;
+			padding: 0 28rpx;
 		}
 
 		.action-icon {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 68rpx;
-			height: 68rpx;
-			background-color: #f5f5f7;
-			border-radius: 50%;
+			flex-shrink: 0;
+			width: 64rpx;
+			height: 64rpx;
+			background-color: #e8f7f4;
+			border-radius: 18rpx;
 		}
 
 		.action-icon-img {
@@ -496,19 +448,38 @@ const navigateToAbout = () => {
 			height: 32rpx;
 		}
 
+		.action-text {
+			min-width: 0;
+			margin-left: 20rpx;
+		}
+
 		.action-title {
-			margin-top: 20rpx;
-			font-size: 29rpx;
+			display: block;
+			font-size: 27rpx;
 			font-weight: 600;
 			line-height: 1.2;
-			color: #0a0a0a;
+			color: #17252b;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
 		}
 
 		.action-desc {
-			margin-top: 8rpx;
-			font-size: 20rpx;
-			line-height: 1.3;
-			color: #8a8a91;
+			display: block;
+			margin-top: 6rpx;
+			font-size: 21rpx;
+			line-height: 1.2;
+			color: #78868f;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.action-divider {
+			flex-shrink: 0;
+			width: 2rpx;
+			height: 46rpx;
+			background-color: #edf2f2;
 		}
 	}
 
@@ -516,43 +487,25 @@ const navigateToAbout = () => {
 	.section-head {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		margin: 36rpx 0 18rpx;
+		margin: 40rpx 0 16rpx;
 
 		.section-title {
-			font-size: 32rpx;
-			font-weight: 600;
+			font-size: 31rpx;
+			font-weight: 700;
 			line-height: 1.1;
-			color: #0a0a0a;
-		}
-
-		.section-action {
-			display: flex;
-			align-items: center;
-		}
-
-		.section-action-text {
-			font-size: 21rpx;
-			line-height: 1;
-			color: #a8a8ae;
-		}
-
-		.section-version {
-			font-size: 21rpx;
-			line-height: 1;
-			color: #a8a8ae;
+			letter-spacing: -0.5rpx;
+			color: #17252b;
 		}
 	}
 
 	// ===== 列表卡片 =====
 	.list-card {
 		box-sizing: border-box;
-		padding: 0 24rpx;
-		background-color: #ffffff;
-		border: 2rpx solid #e8ecf3;
-		border-radius: 28rpx;
-		box-shadow: 0 6rpx 24rpx rgba(15, 23, 42, 0.04);
 		overflow: hidden;
+		padding: 0 48rpx;
+		background-color: #ffffff;
+		border: 2rpx solid #e3ebec;
+		border-radius: 32rpx;
 
 		.list-row {
 			display: flex;
@@ -560,19 +513,8 @@ const navigateToAbout = () => {
 			height: 108rpx;
 		}
 
-		// 行内图标：浅灰圆底
 		.row-icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
 			flex-shrink: 0;
-			width: 64rpx;
-			height: 64rpx;
-			background-color: #f5f5f7;
-			border-radius: 50%;
-		}
-
-		.row-icon-img {
 			width: 30rpx;
 			height: 30rpx;
 		}
@@ -580,11 +522,10 @@ const navigateToAbout = () => {
 		.row-title {
 			flex: 1;
 			min-width: 0;
-			margin-left: 18rpx;
-			font-size: 28rpx;
-			font-weight: 500;
+			margin-left: 20rpx;
+			font-size: 27rpx;
 			line-height: 1.2;
-			color: #0a0a0a;
+			color: #3d4b54;
 		}
 
 		.row-right {
@@ -595,15 +536,15 @@ const navigateToAbout = () => {
 		}
 
 		.row-value {
-			font-size: 22rpx;
+			font-size: 23rpx;
 			line-height: 1;
-			color: #8a8a91;
+			color: #78868f;
 		}
 
 		.row-divider {
 			height: 2rpx;
-			margin-left: 82rpx;
-			background-color: #f0f0f2;
+			margin-left: 50rpx;
+			background-color: #edf2f2;
 		}
 	}
 
@@ -612,39 +553,39 @@ const navigateToAbout = () => {
 		position: relative;
 		flex-shrink: 0;
 		box-sizing: border-box;
-		width: 84rpx;
-		height: 48rpx;
-		background-color: #e9e9ec;
-		border-radius: 24rpx;
+		width: 76rpx;
+		height: 44rpx;
+		background-color: #dde6e7;
+		border-radius: 22rpx;
 
 		.toggle-knob {
 			position: absolute;
-			top: 4rpx;
-			left: 4rpx;
-			width: 40rpx;
-			height: 40rpx;
+			top: 6rpx;
+			left: 6rpx;
+			width: 32rpx;
+			height: 32rpx;
 			background-color: #ffffff;
 			border-radius: 50%;
-			box-shadow: 0 2rpx 6rpx rgba(10, 10, 10, 0.22);
+			box-shadow: 0 2rpx 6rpx rgba(10, 10, 10, 0.18);
 		}
 
 		&--on {
-			background-color: #0a0a0a;
+			background-color: #007c77;
 
 			.toggle-knob {
 				left: auto;
-				right: 4rpx;
+				right: 6rpx;
 			}
 		}
 	}
 
 	// 右箭头
 	.chevron {
-		width: 10rpx;
-		height: 10rpx;
-		margin-left: 10rpx;
-		border-top: 2rpx solid #a8a8ae;
-		border-right: 2rpx solid #a8a8ae;
+		width: 12rpx;
+		height: 12rpx;
+		margin-left: 12rpx;
+		border-top: 2rpx solid #9aa6ac;
+		border-right: 2rpx solid #9aa6ac;
 		transform: rotate(45deg);
 	}
 
@@ -653,18 +594,18 @@ const navigateToAbout = () => {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-top: 32rpx;
+		margin-top: 36rpx;
 
 		.privacy-icon {
-			width: 24rpx;
-			height: 24rpx;
-			margin-right: 8rpx;
+			width: 26rpx;
+			height: 26rpx;
+			margin-right: 10rpx;
 		}
 
 		.privacy-text {
-			font-size: 20rpx;
+			font-size: 21rpx;
 			line-height: 1.2;
-			color: #a8a8ae;
+			color: #8a979e;
 		}
 	}
 }
