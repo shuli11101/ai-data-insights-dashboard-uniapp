@@ -75,7 +75,7 @@
 			}
 		},
 		{
-			"path": "pages/personal/index",
+			"path": "pages/user/personal/index",
 			"style": {
 				"navigationBarTitleText": "个人信息"
 			}

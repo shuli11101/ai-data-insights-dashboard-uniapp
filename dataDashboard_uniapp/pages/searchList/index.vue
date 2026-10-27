@@ -17,47 +17,9 @@
 		<!-- ===== 筛选条件：四个独立下拉框 ===== -->
 		<view class="filter-area">
 			<view class="filters">
-				<!-- 城市选择下拉 -->
+				<!-- 城市选择：热门城市 + 字母分组，组件内部自带下拉面板 -->
 				<view class="dropdown">
-					<view class="chip" :class="{ 'is-active': city !== UNLIMITED }"
-						@click="toggleFilter(cityFilter.id)">
-						<text class="chip-text">{{ city === UNLIMITED ? '城市选择' : city }}</text>
-						<view class="chip-caret" :class="{ 'is-open': openId === cityFilter.id }"></view>
-					</view>
-
-					<view class="filter-panel filter-panel--city" v-if="openId === cityFilter.id">
-						<view class="city-hot">
-							<view class="city-hot-header">
-								<text class="city-hot-title">热门城市</text>
-								<text @click="resetCityFilter()" class="city-hot-reset">重置</text>
-							</view>
-							<view class="city-hot-tags">
-								<text class="city-tag" :class="{ 'is-selected': city === item }"
-									v-for="item in cityFilter.hotCities" :key="item" @click="selectCity(item)">{{ item
-									}}</text>
-							</view>
-						</view>
-
-						<view class="city-body">
-							<scroll-view class="city-scroll" scroll-y :scroll-into-view="cityScrollTo">
-								<view class="city-group" v-for="group in cityFilter.cityGroups" :key="group.letter"
-									:id="'city-' + group.letter">
-									<text class="city-group-letter">{{ group.letter }}</text>
-									<view class="city-group-list">
-										<text class="city-item" :class="{ 'is-selected': city === item }"
-											v-for="item in group.cities" :key="item" @click="selectCity(item)">{{ item
-											}}</text>
-									</view>
-								</view>
-							</scroll-view>
-
-							<view class="city-index">
-								<text class="city-index-item" :class="{ 'is-active': letter === activeLetter }"
-									v-for="letter in cityLetters" :key="letter" @click="onCityLetter(letter)">{{ letter
-									}}</text>
-							</view>
-						</view>
-					</view>
+					<cityPicker :model-value="city" @update:modelValue="onCityChange" />
 				</view>
 
 				<!-- 经验下拉：面板比 chip 宽得多，所以放在筛选行下（见下方），chip 这里只做触发器 -->
@@ -192,30 +154,13 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { onLoad, onReachBottom } from '@dcloudio/uni-app'
 import { useJobList } from '@/utils/useJobList'
-import { getCityListAsync } from '@/api/searchList'
-import { cityInitials, cityShortNames } from '@/utils/cityInitials'
+import cityPicker from '@/components/user/cityPicker.vue'
 
 // 状态栏高度：自定义导航栏用它做顶部留白（H5 端没有状态栏，取 12px 保底）
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
 
 // 首页通过 URL 参数传来的搜索关键词
 const keyword = ref('')
-
-/** 城市分组：letter 为首字母 */
-interface CityGroup {
-	letter: string
-	cities: string[]
-}
-
-/** 城市选择：顶部推荐城市 + 其余城市按首字母分组 */
-interface CityFilter {
-	id: number
-	label: string
-	type: 'city'
-	selected: string
-	hotCities: string[]
-	cityGroups: CityGroup[]
-}
 
 /** 胶囊选项筛选：学历 */
 interface OptionFilter {
@@ -243,8 +188,8 @@ interface JobCard {
 const UNLIMITED = '不限'
 
 // ===== 筛选值：变量名与 /home/jobList 的参数一致，直接透传给接口 =====
-// 城市：接口要「市」前面的短名，'不限' 表示不筛选
-const city = ref(UNLIMITED)
+// 城市：接口要「市」前面的短名，空串表示不筛选
+const city = ref('')
 // 经验年限区间：0 ~ EXPERIENCE_MAX，取到 EXPERIENCE_MAX 表示「10 年以上」
 const EXPERIENCE_MAX = 10
 const experienceMin = ref(0)
@@ -253,46 +198,9 @@ const experienceMax = ref(EXPERIENCE_MAX)
 const salaryMin = ref('')
 const salaryMax = ref('')
 
-// 城市下拉：热门城市写死，其余城市由接口数据按首字母分组
-const cityFilter = reactive<CityFilter>({
-	id: 1,
-	label: '城市选择',
-	type: 'city',
-	selected: UNLIMITED,
-	hotCities: ['北京', '上海', '深圳', '广州', '杭州', '成都', '武汉', '南京'],
-	// 分组数据在 getCities 里由接口填充
-	cityGroups: []
-})
-
-// 展示用城市名：自治州 / 地区 / 盟 查简称表，其余去掉结尾的「市」
-const cityLabel = (name: string) => cityShortNames[name] ?? name.replace(/市$/, '')
-// 获取城市列表
-const getCities = async () => {
-	const cities = await getCityListAsync()
-	const grouped = new Map<string, string[]>()
-
-	cities
-		// 过滤掉「河南省-省直辖县级行政区划」这类省级占位行，它们不是可选城市
-		.filter(({ name }) => !name.includes('-'))
-		.forEach(({ name }) => {
-			const letter = cityInitials[name] ?? '#'
-			const group = grouped.get(letter) ?? []
-			group.push(cityLabel(name))
-			grouped.set(letter, group)
-		})
-
-	cityFilter.cityGroups = [...grouped]
-		.map(([letter, list]) => ({ letter, cities: list }))
-		.sort((a, b) => a.letter.localeCompare(b.letter))
-}
-// 选中城市：直接用短名，接口要的就是这个；选中后立即重新查询
-const selectCity = (value: string) => {
+// 选中城市：组件回传短名，选中后立即重新查询
+const onCityChange = (value: string) => {
 	city.value = value
-	getList()
-}
-// 重置城市筛选
-const resetCityFilter = () => {
-	city.value = UNLIMITED
 	getList()
 }
 
@@ -440,22 +348,6 @@ const selectOption = (filter: OptionFilter, option: string) => {
 	filter.selected = option
 }
 
-// 城市面板右侧字母索引：取城市下拉的分组首字母
-const cityLetters = computed(() => cityFilter.cityGroups.map((group) => group.letter))
-
-// 待滚动的分组 id、当前高亮的字母
-const cityScrollTo = ref('')
-const activeLetter = ref('')
-
-// 点字母：滚动到对应分组并高亮（先清空再赋值，连点同一个字母也能重新定位）
-const onCityLetter = (letter: string) => {
-	cityScrollTo.value = ''
-	nextTick(() => {
-		cityScrollTo.value = `city-${letter}`
-		activeLetter.value = letter
-	})
-}
-
 // 静态数据：岗位列表
 const jobList = ref<JobCard[]>([])
 
@@ -482,9 +374,6 @@ onLoad((options) => {
 	keyword.value = decodeURIComponent(options?.keyword ?? '')
 	jobList.value = []
 	getList()
-
-	// 获取城市列表
-	getCities()
 })
 
 // 返回搜索页（首页）
@@ -749,127 +638,11 @@ onReachBottom(() => {
 			}
 		}
 
-		/* 宽面板（城市 / 经验）：左对齐，宽度和筛选行接近，居中会因为 chip 偏左而出屏 */
-		.filter-panel--city,
+		/* 宽面板（经验）：左对齐，宽度和筛选行接近，居中会因为 chip 偏左而出屏 */
 		.filter-panel--range {
 			left: 0;
 			width: 620rpx;
 			transform: none;
-		}
-
-		/* 城市面板：热门城市 + 字母分组的城市列表 */
-		.filter-panel--city {
-			display: block;
-
-			.city-hot {
-
-				.city-hot-header {
-					display: flex;
-					justify-content: space-between;
-					align-items: center;
-				}
-
-				.city-hot-title,
-				.city-hot-reset {
-					font-size: 24rpx;
-					line-height: 1;
-					color: #a3a3a3;
-				}
-
-				/* 推荐城市：一行可放多个，超出自动换行 */
-				.city-hot-tags {
-					display: flex;
-					flex-wrap: wrap;
-					gap: 16rpx;
-					margin-top: 16rpx;
-				}
-
-				.city-tag {
-					padding: 12rpx 28rpx;
-					font-size: 26rpx;
-					line-height: 1;
-					color: #525252;
-					background-color: #f5f5f5;
-					border-radius: 999rpx;
-
-					&.is-selected {
-						font-weight: 700;
-						color: #ffffff;
-						background-color: #0a0a0a;
-					}
-				}
-			}
-
-			/* 全部城市：左侧列表限高滚动，右侧字母索引固定 */
-			.city-body {
-				display: flex;
-				height: 560rpx;
-				margin-top: 24rpx;
-			}
-
-			.city-scroll {
-				flex: 1;
-				min-width: 0;
-				height: 100%;
-			}
-
-			.city-group {
-				margin-bottom: 16rpx;
-
-				.city-group-letter {
-					display: block;
-					font-size: 24rpx;
-					line-height: 1.6;
-					color: #a3a3a3;
-				}
-
-				.city-group-list {
-					display: flex;
-					flex-wrap: wrap;
-					gap: 12rpx;
-				}
-			}
-
-			/* 城市胶囊：一行三个 */
-			.city-item {
-				box-sizing: border-box;
-				width: calc((100% - 24rpx) / 3);
-				padding: 14rpx 4rpx;
-				font-size: 26rpx;
-				line-height: 1;
-				text-align: center;
-				color: #525252;
-				background-color: #f5f5f5;
-				border-radius: 12rpx;
-
-				&.is-selected {
-					font-weight: 700;
-					color: #ffffff;
-					background-color: #0a0a0a;
-				}
-			}
-
-			/* 右侧字母索引：等分撑满滚动区高度 */
-			.city-index {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				justify-content: space-between;
-				flex-shrink: 0;
-				width: 40rpx;
-				padding-left: 8rpx;
-
-				.city-index-item {
-					font-size: 20rpx;
-					line-height: 1;
-					color: #a3a3a3;
-
-					&.is-active {
-						font-weight: 700;
-						color: #2563eb;
-					}
-				}
-			}
 		}
 
 		/* 学历面板：位于筛选行最右侧，右对齐避免超出屏幕 */

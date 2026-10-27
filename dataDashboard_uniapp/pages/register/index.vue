@@ -4,11 +4,6 @@
 		<view class="topbar">
 			<view class="back" @click="goBack"></view>
 
-			<view class="brand">
-				<image class="brand-mark" src="/static/icon/auth/brand-mark.svg" mode="aspectFit" />
-				<text class="brand-name">AI 分析</text>
-			</view>
-
 			<text class="help">帮助</text>
 		</view>
 
@@ -42,7 +37,9 @@
 				<input class="field-input" type="number" v-model="code" maxlength="6" placeholder="请输入验证码"
 					placeholder-class="field-placeholder" />
 				<view class="code-divider"></view>
-				<text class="code-btn">获取验证码</text>
+				<text class="code-btn" :class="{ 'is-disabled': countdown > 0 }" @click="sendCode">
+					{{ countdown > 0 ? `${countdown}s 后重发` : '获取验证码' }}
+				</text>
 			</view>
 		</view>
 
@@ -70,7 +67,7 @@
 		</view>
 
 		<!-- ===== 主按钮 ===== -->
-		<view class="primary-btn">注册并登录</view>
+		<view class="primary-btn" @click="setRegister()">注册并登录</view>
 
 		<!-- ===== 协议勾选 ===== -->
 		<view class="consent" @click="agreed = !agreed">
@@ -100,7 +97,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { register } from '@/api/auth'
+import { getErrorMessage } from '@/utils/request'
+import { onUnmounted, ref } from 'vue'
 
 // 静态表单数据：暂未接入注册接口
 const phone = ref('')
@@ -108,7 +107,51 @@ const code = ref('')
 const password = ref('')
 const showPassword = ref(false)
 // 默认勾选，与设计稿一致
-const agreed = ref(true)
+const agreed = ref(false)
+
+// 验证码重发倒计时（秒）
+const countdown = ref(0)
+// 是否已点击获取验证码：未获取过不允许注册
+const codeSent = ref(false)
+let timer: ReturnType<typeof setInterval> | null = null
+
+// 启动 60 秒倒计时
+const startCountdown = () => {
+	countdown.value = 60
+	if (timer) clearInterval(timer)
+	timer = setInterval(() => {
+		countdown.value -= 1
+		if (countdown.value <= 0) {
+			countdown.value = 0
+			if (timer) {
+				clearInterval(timer)
+				timer = null
+			}
+		}
+	}, 1000)
+}
+
+// 获取验证码：倒计时期间直接忽略点击（防抖），并校验手机号
+const sendCode = () => {
+	if (countdown.value > 0) return
+	if (!/^1\d{10}$/.test(phone.value)) {
+		uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
+		return
+	}
+
+
+	codeSent.value = true
+	startCountdown()
+	uni.showToast({ title: '验证码已发送', icon: 'none' })
+}
+
+// 页面卸载时清理定时器，避免倒计时继续跑
+onUnmounted(() => {
+	if (timer) {
+		clearInterval(timer)
+		timer = null
+	}
+})
 
 // 返回上一页；直接进入本页时退回登录页
 const goBack = () => {
@@ -123,6 +166,51 @@ const goBack = () => {
 // 登录页替换当前页，避免登录/注册来回跳转堆积页面栈
 const toLogin = () => {
 	uni.redirectTo({ url: '/pages/login/index' })
+}
+
+// 注册账号
+const setRegister = async () => {
+	// 没点过“获取验证码”不允许注册
+	if (!codeSent.value) {
+		uni.showToast({ title: '请先获取验证码', icon: 'none' })
+		return
+	}
+	// 未勾选用户协议不允许注册
+	if (!agreed.value) {
+		uni.showToast({ title: '请先同意用户协议和隐私政策', icon: 'none' })
+		return
+	}
+
+	try {
+		const res = await register({
+			phone: phone.value,
+			code: code.value,
+			password: password.value
+		})
+		// 存储 token 到本地存储
+		if (res) {
+			if (res.token) {
+				uni.setStorageSync('token', res.token)
+			}
+		}
+
+		uni.showToast({
+			title: '注册成功',
+			icon: 'success'
+		})
+		uni.switchTab({
+			url: '/pages/home/index'
+		})
+	} catch (error) {
+		console.error('注册失败:', error)
+		// 409 等业务错误使用后端返回的提示，例如“该手机号已注册”
+		uni.showToast({ title: getErrorMessage(error, '注册失败，请稍后重试'), icon: 'none' })
+	}
+
+
+
+
+
 }
 </script>
 
@@ -289,6 +377,11 @@ const toLogin = () => {
 			font-weight: 600;
 			line-height: 1;
 			color: #007c77;
+
+			// 倒计时中：置灰，提示不可点击
+			&.is-disabled {
+				color: #a1acb3;
+			}
 		}
 
 		.eye-icon {

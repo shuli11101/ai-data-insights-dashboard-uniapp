@@ -17,9 +17,9 @@ export default {
 page,
 uni-page-body {
 	box-sizing: border-box;
-	background-color: #ffffff;
-	/* 全局顶部浅青渐变：约 320px 内渐隐为白色 */
-	background-image: linear-gradient(180deg, #d9f1f3 0%, #ffffff 100%);
+	background-color: #f7f7f7;
+	/* 全局顶部浅青渐变：约 320px 内渐隐为底色 */
+	background-image: linear-gradient(180deg, #d9f1f3 0%, #f7f7f7 100%);
 	background-repeat: no-repeat;
 	background-size: 100% 640rpx;
 }

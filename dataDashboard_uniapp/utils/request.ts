@@ -19,6 +19,21 @@ export const http = createLuchRequest({
 	}
 })
 
+// 请求拦截器：本地存有 token 时，自动在请求头带上 Authorization
+http.interceptors.request.use(
+	(config) => {
+		const token = uni.getStorageSync('token') as string
+		if (token) {
+			config.header = {
+				...config.header,
+				Authorization: `Bearer ${token}`
+			}
+		}
+		return config
+	},
+	(error) => Promise.reject(error)
+)
+
 // 响应拦截器：统一解包后端响应结构，并收敛请求错误
 http.interceptors.response.use(
 	(response) => {
@@ -29,8 +44,17 @@ http.interceptors.response.use(
 	(error) => {
 		// 网络异常、超时、HTTP 状态非 2xx 等都会进入这里
 		if (isLuchRequestError(error)) {
-			console.error(`[request] ${error.code}: ${error.message}`)
+			// 打印后端返回的业务错误体，便于排查（如 409 { code, message }）
+			const body = (error.response as { data?: unknown } | undefined)?.data
+			console.error(`[request] ${error.code}: ${error.message}`, body)
 		}
 		return Promise.reject(error)
 	}
 )
+
+/** 从请求错误中取出后端返回的 message（luch-request 把响应体放在 error.response.data） */
+export const getErrorMessage = (error: unknown, fallback = '请求失败，请稍后重试') => {
+	if (!isLuchRequestError(error)) return fallback
+	const body = (error.response as { data?: { message?: string } } | undefined)?.data
+	return body?.message || fallback
+}

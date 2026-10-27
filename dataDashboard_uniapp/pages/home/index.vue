@@ -11,6 +11,12 @@
 			<!-- 数据卡片轮播 -->
 			<swiper class="hero-swiper" :autoplay="true" :interval="3000" :current="currentSlide"
 				@change="currentSlide = $event.detail.current" :circular="true">
+
+				<!-- 品牌宣传图 -->
+				<swiper-item>
+					<image class="hero-image" src="/static/images/jobvision-promo.png" mode="aspectFill" />
+				</swiper-item>
+
 				<!-- 经验与平均薪资：折线图，数据为空时整块不渲染 -->
 				<swiper-item>
 					<view class="chart-card" v-if="experiencePoints.length">
@@ -25,36 +31,7 @@
 					</view>
 				</swiper-item>
 
-				<!-- 品牌与近 7 日趋势 -->
-				<swiper-item>
-					<view class="hero">
-						<view class="hero-top">
-							<view class="hero-icon">
-								<view class="hero-icon-bar hero-icon-bar--sm"></view>
-								<view class="hero-icon-bar hero-icon-bar--md"></view>
-								<view class="hero-icon-bar hero-icon-bar--lg"></view>
-							</view>
-							<view class="hero-text">
-								<text class="hero-title">JobVision</text>
-								<text class="hero-subtitle">大数据招聘岗位分析平台</text>
-							</view>
-						</view>
 
-						<view class="hero-bottom">
-							<view class="hero-badge">
-								<view class="hero-badge-dot"></view>
-								<text class="hero-badge-text">实时数据更新</text>
-							</view>
-							<view class="hero-stat">
-								<text class="hero-stat-label">近 7 日岗位总量</text>
-								<text class="hero-stat-value">+23.6%</text>
-								<!-- 迷你折线图：数据由 trendValues 驱动，无数据时不绘制 -->
-								<sparkLine class="hero-stat-chart" :values="trendValues" line-color="#007C77"
-									area-from="rgba(0, 124, 119, 0.16)" area-to="rgba(0, 124, 119, 0)" />
-							</view>
-						</view>
-					</view>
-				</swiper-item>
 
 				<!-- 薪酬分布：柱状图，数据为空时整块不渲染 -->
 				<swiper-item>
@@ -119,7 +96,6 @@ import searchInput from '@/components/searchInput.vue'
 // #ifdef APP-PLUS
 import appSplash from '@/components/AppSplash.vue'
 // #endif
-import sparkLine from '@/components/home/sparkLine.vue'
 import districtChart from '@/components/home/districtChart.vue'
 import lineChart from '@/components/home/lineChart.vue'
 import salaryChart from '@/components/home/salaryChart.vue'
@@ -129,10 +105,6 @@ import { useJobList, type JobFilters, type JobRow } from '@/utils/useJobList'
 
 // swiper 索引
 const currentSlide = ref(0)
-
-// 近 7 日岗位总量趋势：暂时用假数据（末值比首值 +23.6%，与卡片上写的涨幅对齐），
-// 等后端提供按日聚合的接口后，把返回值赋给这里即可
-const trendValues = ref<number[]>([1180, 1206, 1176, 1258, 1219, 1362, 1458])
 
 // 岗位筛选参数
 const query = reactive<JobFilters>({
@@ -289,7 +261,7 @@ onLoad(() => {
 	padding-top: 24rpx;
 
 	.main {
-		padding: 0 40rpx 40rpx;
+		padding: 0 20rpx 20rpx;
 
 		// 轮播高度与卡片一致；左右负边距让轮播比正文更宽
 		.hero-swiper {
@@ -297,8 +269,15 @@ onLoad(() => {
 			margin: 0 -16rpx;
 		}
 
-		// ===== 卡片通用外观：白底 + 细描边 + 大圆角 =====
-		.hero,
+		// ===== 品牌宣传图：铺满轮播区域 =====
+		.hero-image {
+			display: block;
+			width: 100%;
+			height: 392rpx;
+			border-radius: 32rpx;
+		}
+
+		// ===== 折线图卡片：白底 + 细描边 + 大圆角 =====
 		.chart-card {
 			display: flex;
 			flex-direction: column;
@@ -309,10 +288,7 @@ onLoad(() => {
 			background-color: #ffffff;
 			border: 2rpx solid #e9eeec;
 			border-radius: 32rpx;
-		}
 
-		// ===== 折线图卡片 =====
-		.chart-card {
 			.card-title {
 				display: block;
 				font-size: 32rpx;
@@ -334,139 +310,6 @@ onLoad(() => {
 				flex: 1;
 				min-height: 0;
 				margin-top: 12rpx;
-			}
-		}
-
-		// ===== 品牌与趋势卡片 =====
-		.hero {
-			justify-content: space-between;
-
-			.hero-top {
-				display: flex;
-				align-items: center;
-			}
-
-			// 品牌图标：浅灰底 + 青色小柱子
-			.hero-icon {
-				display: flex;
-				align-items: flex-end;
-				justify-content: center;
-				flex-shrink: 0;
-				box-sizing: border-box;
-				width: 96rpx;
-				height: 96rpx;
-				padding-bottom: 24rpx;
-				background-color: #f5f5f5;
-				border-radius: 24rpx;
-
-				.hero-icon-bar {
-					width: 8rpx;
-					margin: 0 3rpx;
-					background-color: #007c77;
-					border-radius: 4rpx;
-
-					&--sm {
-						height: 14rpx;
-					}
-
-					&--md {
-						height: 24rpx;
-					}
-
-					&--lg {
-						height: 34rpx;
-					}
-				}
-			}
-
-			.hero-text {
-				min-width: 0;
-				margin-left: 24rpx;
-
-				.hero-title {
-					display: block;
-					font-size: 40rpx;
-					font-weight: 700;
-					line-height: 1.1;
-					color: #0a0a0a;
-				}
-
-				.hero-subtitle {
-					display: block;
-					margin-top: 8rpx;
-					font-size: 22rpx;
-					line-height: 1.2;
-					color: #a3a3a3;
-				}
-			}
-
-			.hero-bottom {
-				display: flex;
-				align-items: flex-end;
-				justify-content: space-between;
-				flex: 1;
-				margin-top: 12rpx;
-				margin-bottom: 12rpx;
-			}
-
-			// 实时更新徽章
-			.hero-badge {
-				display: flex;
-				align-items: center;
-				box-sizing: border-box;
-				height: 44rpx;
-				margin-bottom: 12rpx;
-				padding: 0 18rpx;
-				background-color: #f5f5f5;
-				border-radius: 22rpx;
-
-				.hero-badge-dot {
-					width: 12rpx;
-					height: 12rpx;
-					background-color: #007c77;
-					border-radius: 50%;
-				}
-
-				.hero-badge-text {
-					margin-left: 10rpx;
-					font-size: 20rpx;
-					line-height: 1;
-					color: #737373;
-				}
-			}
-
-			// 右侧趋势小卡
-			.hero-stat {
-				box-sizing: border-box;
-				width: 300rpx;
-				height: 176rpx;
-				padding: 20rpx 22rpx 0;
-				background-color: #fafafa;
-				border: 2rpx solid #eeeeee;
-				border-radius: 20rpx;
-
-				.hero-stat-label {
-					display: block;
-					font-size: 20rpx;
-					line-height: 1.2;
-					color: #a3a3a3;
-				}
-
-				.hero-stat-value {
-					display: block;
-					margin-top: 4rpx;
-					font-size: 36rpx;
-					font-weight: 700;
-					line-height: 1.2;
-					color: #0a0a0a;
-				}
-
-				// 迷你趋势图：只负责占位与定尺寸，折线由 sparkLine 组件用 canvas 绘制
-				.hero-stat-chart {
-					width: 100%;
-					height: 72rpx;
-					margin-top: 8rpx;
-				}
 			}
 		}
 
@@ -519,6 +362,9 @@ onLoad(() => {
 		.content {
 			display: flex;
 			flex-direction: column;
+			background-color: #ffffff;
+			padding: 0 26rpx;
+			border-radius: 32rpx;
 
 			.job {
 				padding: 26rpx 0 30rpx;

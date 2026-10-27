@@ -95,7 +95,7 @@
 
 				<view class="row">
 					<image class="row-icon" src="/static/icon/user/logout.svg" mode="aspectFit" />
-					<text class="row-title row-title--danger">退出登录</text>
+					<text class="row-title row-title--danger" @click="logout">退出登录</text>
 					<view class="chevron chevron--danger"></view>
 				</view>
 			</view>
@@ -108,6 +108,12 @@
 <script setup lang="ts">
 // 自定义导航栏需自行避开状态栏
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
+
+// 退出登录：清空 token 并跳转登录页
+const logout = () => {
+	uni.removeStorageSync('token')
+	uni.navigateTo({ url: '/pages/login/index' })
+}
 
 // 返回上一页
 const goBack = () => {

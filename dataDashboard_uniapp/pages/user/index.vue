@@ -16,18 +16,19 @@
 		<view class="profile-card">
 			<view class="profile-top">
 				<view class="avatar">
-					<text class="avatar-text">陈</text>
+					<image v-if="profile?.avatar" class="avatar-img" :src="profile.avatar" mode="aspectFill" />
+					<text v-else class="avatar-text">{{ avatarText }}</text>
 				</view>
 
 				<view class="profile-info">
 					<view class="name-row">
-						<text class="name">陈默</text>
-						<view class="status-pill">
+						<text class="name">{{ nickname }}</text>
+						<view class="status-pill" v-if="profile?.jobStatus">
 							<view class="status-dot"></view>
-							<text class="status-text">求职中</text>
+							<text class="status-text">{{ profile.jobStatus }}</text>
 						</view>
 					</view>
-					<text class="profile-meta">前端工程师 · 3–5 年 · 上海</text>
+					<text class="profile-meta">{{ metaText }}</text>
 				</view>
 
 				<view class="edit-pill">
@@ -38,17 +39,18 @@
 
 			<view class="stats">
 				<view class="stat">
-					<text class="stat-value">7</text>
+					<text class="stat-value">{{ profile?.reportCount ?? 0 }}</text>
 					<text class="stat-label">分析报告</text>
 				</view>
 				<view class="stat-divider"></view>
 				<view class="stat">
-					<text class="stat-value stat-value--accent">84<text class="stat-unit">%</text></text>
+					<text class="stat-value stat-value--accent">{{ avgMatch ?? '--' }}<text class="stat-unit"
+							v-if="avgMatch !== null">%</text></text>
 					<text class="stat-label">平均匹配</text>
 				</view>
 				<view class="stat-divider"></view>
 				<view class="stat">
-					<text class="stat-value">8</text>
+					<text class="stat-value">{{ profile?.favoriteCount ?? 0 }}</text>
 					<text class="stat-label">收藏职位</text>
 				</view>
 			</view>
@@ -168,13 +170,49 @@
 </template>
 
 <script setup lang="ts">
+import { getUserProfile, type UserProfile } from '@/api/user'
+import { onShow } from '@dcloudio/uni-app'
+import { computed, ref } from 'vue'
+
 // 自定义导航栏需自行避开状态栏
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
+
+// 用户基本信息
+const profile = ref<UserProfile | null>(null)
+
+// 头像兜底：昵称首字
+const avatarText = computed(() => profile.value?.nickname?.[0] || '未')
+
+const nickname = computed(() => profile.value?.nickname || '未登录')
+
+// 资料摘要：职位 · 经验 · 城市，缺失的字段自动省略
+const metaText = computed(() => {
+	const item = profile.value
+	if (!item) return '资料完善中'
+	return [item.currentJob, item.experience, item.location].filter(Boolean).join(' · ') || '资料完善中'
+})
+
+// 平均匹配度：后端暂未返回时显示 --
+const avgMatch = computed(() => profile.value?.avgMatch ?? null)
+
+// 获取用户信息
+const loadProfile = async () => {
+	try {
+		profile.value = await getUserProfile()
+	} catch (error) {
+		console.error('[user] 获取用户信息失败', error)
+	}
+}
+
+// tabBar 页用 onShow：从编辑资料等页面返回时也能刷新
+onShow(() => {
+	loadProfile()
+})
 
 // 跳转偏好设置
 const navigateToPersonal = () => {
 	uni.navigateTo({
-		url: '/pages/personal/index'
+		url: '/pages/user/personal/index'
 	})
 }
 
@@ -198,7 +236,7 @@ const navigateToAbout = () => {
 	box-sizing: border-box;
 	width: 100%;
 	min-height: 100vh;
-	padding: 24rpx 40rpx 160rpx;
+	padding: 32rpx 40rpx 160rpx;
 
 	// ===== 页头 =====
 	.header {
@@ -281,6 +319,13 @@ const navigateToAbout = () => {
 				font-weight: 600;
 				line-height: 1;
 				color: #007c77;
+			}
+
+			// 后端有头像时铺满圆形
+			.avatar-img {
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
 			}
 		}
 

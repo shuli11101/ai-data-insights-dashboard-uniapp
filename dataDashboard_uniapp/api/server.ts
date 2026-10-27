@@ -17,6 +17,22 @@ export interface PersonalInfo {
   city: string
   currentSalary: number | undefined
   expectedSalary: number | undefined
+  /** 职位名称 */
+  jobTitle?: string
+  /** 求职状态：在职 / 求职中 / 离职 */
+  jobStatus?: string
+}
+
+/** 保存求职意向的请求体 */
+export interface SavePersonalParams {
+  city: string
+  jobTitle: string
+  experience: string
+  education: string
+  skills: string[]
+  currentSalary: number
+  expectedSalary: number
+  jobStatus: string
 }
 
 // 获取岗位数据
@@ -91,7 +107,7 @@ export const getSurveyStatus = async () => {
 }
 
 // 将用户基础信息存入数据库（ip 由服务端从请求中获取，无需前端传）
-export const setPersonalInfo = async (body: PersonalInfo) => {
+export const setPersonalInfo = async (body: SavePersonalParams) => {
   return (await http.post<{ id: string }>('/setPersonalInfo', body)).data
 }
 

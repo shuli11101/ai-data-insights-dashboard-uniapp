@@ -32,22 +32,22 @@
 			</view>
 		</view>
 
-		<!-- ===== 短信验证码 ===== -->
+		<!-- ===== 密码 ===== -->
 		<view class="field">
 			<view class="field-head">
-				<text class="field-label">短信验证码</text>
-				<text class="field-hint">6 位数字</text>
+				<text class="field-label">密码</text>
+				<text class="field-hint">8–20 位</text>
 			</view>
 			<view class="field-box">
-				<input class="field-input" type="number" v-model="code" maxlength="6" placeholder="请输入验证码"
-					placeholder-class="field-placeholder" />
-				<view class="code-divider"></view>
-				<text class="code-btn">获取验证码</text>
+				<input class="field-input" :password="!showPassword" v-model="password" maxlength="20"
+					placeholder="请输入登录密码" placeholder-class="field-placeholder" />
+				<image class="eye-icon" src="/static/icon/auth/eye.svg" mode="aspectFit"
+					@click="showPassword = !showPassword" />
 			</view>
 		</view>
 
 		<!-- ===== 主按钮 ===== -->
-		<view class="primary-btn">登录</view>
+		<view class="primary-btn" @click="setLogin">登录</view>
 
 		<!-- ===== 去注册 ===== -->
 		<view class="switch-row">
@@ -92,13 +92,44 @@
 </template>
 
 <script setup lang="ts">
+import { login } from '@/api/auth'
+import { getErrorMessage } from '@/utils/request'
 import { ref } from 'vue'
 
-// 静态表单数据：暂未接入登录接口
 const phone = ref('')
-const code = ref('')
+const password = ref('')
+const showPassword = ref(false)
 // 默认勾选，与注册页保持一致
-const agreed = ref(true)
+const agreed = ref(false)
+
+// 登录：校验通过后调用登录接口并保存 token
+const setLogin = async () => {
+	if (!/^1\d{10}$/.test(phone.value)) {
+		uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
+		return
+	}
+	if (!password.value) {
+		uni.showToast({ title: '请输入密码', icon: 'none' })
+		return
+	}
+	// 未勾选用户协议不允许登录
+	if (!agreed.value) {
+		uni.showToast({ title: '请先同意用户协议和隐私政策', icon: 'none' })
+		return
+	}
+
+	try {
+		const res = await login({ phone: phone.value, password: password.value })
+		if (res.token) {
+			uni.setStorageSync('token', res.token)
+		}
+		uni.showToast({ title: '登录成功', icon: 'success' })
+		uni.switchTab({ url: '/pages/home/index' })
+	} catch (error) {
+		console.error('[login] 登录失败', error)
+		uni.showToast({ title: getErrorMessage(error, '手机号或密码错误'), icon: 'none' })
+	}
+}
 
 // 注册页替换当前页，避免登录/注册来回跳转堆积页面栈
 const toRegister = () => {
@@ -264,20 +295,11 @@ const goBack = () => {
 			color: #17252b;
 		}
 
-		.code-divider {
+		.eye-icon {
 			flex-shrink: 0;
-			width: 2rpx;
-			height: 68rpx;
-			margin: 0 24rpx;
-			background-color: #e3ebec;
-		}
-
-		.code-btn {
-			flex-shrink: 0;
-			font-size: 25rpx;
-			font-weight: 600;
-			line-height: 1;
-			color: #007c77;
+			width: 32rpx;
+			height: 32rpx;
+			margin-left: 16rpx;
 		}
 	}
 }

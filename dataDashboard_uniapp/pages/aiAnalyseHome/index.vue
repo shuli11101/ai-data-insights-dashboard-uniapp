@@ -1,7 +1,7 @@
 <template>
 	<view class="analyse-home">
 		<!-- ===== 顶部标题 + 新建按钮 ===== -->
-		<view class="header">
+		<view class="header" :style="{ paddingTop: statusBarHeight + 'px' }">
 			<text class="header-title">AI 分析</text>
 			<view class="header-side">
 				<!-- 今日话题气泡：静态引导文案，点击进入对话 -->
@@ -79,9 +79,8 @@ import { computed, reactive, ref } from 'vue'
 
 import { deleteConversations, fetchConversations } from '@/api/ai'
 
-// 状态栏高度：自定义导航栏用它做顶部留白
-// H5 端拿不到状态栏高度（为 0），给 44px 保底，避免标题贴顶
-const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
+// 状态栏高度：自定义导航栏用它做顶部留白（H5 端为 0）
+const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
 
 /** 入口卡片：技术栈评估 / JD 匹配 */
 interface EntryItem {

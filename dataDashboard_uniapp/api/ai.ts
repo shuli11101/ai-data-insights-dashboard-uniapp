@@ -2,6 +2,16 @@ export type AiScene = 'drawer' | 'interpret' | 'skill' | 'jd' | 'chat' | '0' | '
 
 const BASE_URL = 'http://127.0.0.1:3000'
 
+/** 构造请求头：JSON + 登录后附加 token（原生 fetch 不走 http 拦截器） */
+function buildHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const token = uni.getStorageSync('token') as string
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+  return headers
+}
+
 /** 后端统一响应包装 */
 interface ApiResponse<T> {
   code: number
@@ -68,9 +78,7 @@ export async function streamAI({
 } : StreamAIOptions): Promise<void> {
   const response = await fetch(BASE_URL + '/api/ai/chat', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(),
     signal,
     body: JSON.stringify({
       scene,
@@ -128,7 +136,7 @@ export async function streamAI({
 
 /** 通用 GET：解包后端的 { code, message, data } */
 async function getJSON<T>(path: string): Promise<T> {
-  const response = await fetch(BASE_URL + path)
+  const response = await fetch(BASE_URL + path, { headers: buildHeaders() })
   if (!response.ok) {
     throw new Error('请求失败，请稍后重试')
   }
@@ -155,9 +163,7 @@ export function fetchConversation(conversationId: string): Promise<ConversationD
 export async function deleteConversations(conversationIds: string[]): Promise<void> {
   const response = await fetch(BASE_URL + '/api/ai/conversation', {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(),
     body: JSON.stringify({ conversationIds }),
   })
   const detail: ApiResponse<unknown> | null = await response.json().catch(() => null)
