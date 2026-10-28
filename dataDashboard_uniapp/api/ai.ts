@@ -1,3 +1,5 @@
+import { readSSE } from '@/utils/sse'
+
 export type AiScene = 'drawer' | 'interpret' | 'skill' | 'jd' | 'chat' | '0' | '4'
 
 const BASE_URL = 'http://127.0.0.1:3000'
@@ -93,45 +95,52 @@ export async function streamAI({
     throw new Error(detail?.message || detail?.error || 'AI 分析失败')
   }
 
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-
-  while(true) {
-    const { done, value } = await reader.read()
-    if(done) {
-      break
+  await readSSE(response, (event) => {
+    if (event.conversationId) {
+      onConversationId?.(event.conversationId)
     }
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop() ?? ''
-    for(const line of lines) {
-      if(!line.startsWith('data:')) {
-        continue
-      }
-      // {"choices":[{"delta":{"content":"你"}}]} -> payload(把最前面的的 data: 去掉了)
-      const payload = line.slice(5).trim()
-      if(payload === '[DONE]') {
-        return
-      }
-
-      let event: { content?: string; error?: string; conversationId?: string }
-      try {
-        event = JSON.parse(payload)
-      } catch  {
-        continue
-      }
-      if(event.error) {
-        throw new Error(event.error)
-      }
-      if(event.conversationId) {
-        onConversationId?.(event.conversationId)
-      }
-      if(event.content) {
-        onDelta(event.content)
-      }
+    if (event.content) {
+      onDelta(event.content)
     }
+  })
+}
+
+export interface StreamMatchOptions {
+  /** 岗位 id */
+  jobId: number
+  /** true 忽略缓存重新生成 */
+  force?: boolean
+  signal?: AbortSignal
+  /** 每收到一次文本增量，调用该回调 */
+  onDelta: (delta: string) => void
+  /** 首帧回调：是否命中缓存，缓存时带上次的匹配分 */
+  onCached?: (cached: boolean, score?: number) => void
+}
+
+// 岗位匹配度分析（SSE）：POST /api/ai/match
+export async function streamMatch({
+  jobId,
+  force = false,
+  signal,
+  onDelta,
+  onCached,
+}: StreamMatchOptions): Promise<void> {
+  const response = await fetch(BASE_URL + '/api/ai/match', {
+    method: 'POST',
+    headers: buildHeaders(),
+    signal,
+    body: JSON.stringify({ jobId, force }),
+  })
+
+  if (!response.ok || !response.body) {
+    const detail = await response.json().catch(() => null)
+    throw new Error(detail?.message || '匹配分析失败')
   }
+
+  await readSSE(response, (event) => {
+    if (event.cached !== undefined) onCached?.(event.cached, event.score)
+    if (event.content) onDelta(event.content)
+  })
 }
 
 /** 通用 GET：解包后端的 { code, message, data } */

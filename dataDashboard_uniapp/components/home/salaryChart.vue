@@ -34,8 +34,8 @@ withDefaults(
 	flex-direction: column;
 	box-sizing: border-box;
 	width: 100%;
-	height: 392rpx;
-	padding: 32rpx 32rpx 24rpx;
+	height: 356rpx;
+	padding: 36rpx 32rpx 24rpx;
 	background-color: #ffffff;
 	border: 2rpx solid #e9eeec;
 	border-radius: 32rpx;

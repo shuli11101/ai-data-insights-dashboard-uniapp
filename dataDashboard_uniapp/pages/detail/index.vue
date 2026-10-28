@@ -4,7 +4,9 @@
 		<view class="navbar">
 			<view class="back" @click="onBack"></view>
 			<view class="navbar-actions">
-				<image class="icon-collect" src="/static/icon/detail/detail-collect.svg" mode="aspectFit" />
+				<image class="icon-collect"
+					:src="collecting ? '/static/icon/detail/detail-collect-active.svg' : '/static/icon/detail/detail-collect.svg'"
+					mode="aspectFit" @click="collectJob" />
 				<image class="icon-share" src="/static/icon/detail/detail-share.svg" mode="aspectFit" />
 			</view>
 		</view>
@@ -56,7 +58,8 @@
 				</view>
 			</view>
 
-			<text class="updated" v-if="jobDetail.publish_date">职位信息更新于 {{ jobDetail.publish_date }}</text>
+			<text class="updated" v-if="jobDetail.publish_date">职位信息更新于
+				{{ formatPublishDate(jobDetail.publish_date) }}</text>
 		</view>
 
 		<!-- ===== 底部操作栏 ===== -->
@@ -64,17 +67,29 @@
 			<view class="btn btn-jd">
 				<text class="btn-text">JD 岗位描述</text>
 			</view>
-			<view class="btn btn-ai" @click="navigateToAI">
+			<view class="btn btn-ai" @click="startMatch">
 				<text class="btn-text btn-text-light">AI 分析匹配度</text>
 			</view>
 		</view>
+
+		<!-- ===== 匹配分析结果：本页内流式展示，返回只关闭浮层 ===== -->
+		<transition name="match">
+			<view v-if="matchOpen" class="match-overlay" :style="{ paddingTop: statusBarHeight + 'px' }">
+				<matchPanel :text="matchText" :loading="matchLoading" :saving="savingReport" @back="closeMatch"
+					@save="saveReport" />
+			</view>
+		</transition>
 	</view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { getJobDetail, type JobDetail } from '@/api/server'
-import { onLoad } from '@dcloudio/uni-app'
+import { streamMatch } from '@/api/ai'
+import { addFavorite, getMatchReport, removeFavorite, saveMatchReport } from '@/api/user'
+import { getErrorMessage } from '@/utils/request'
+import matchPanel from '@/components/aiAnalyse/matchPanel.vue'
+import { onBackPress, onLoad, onUnload } from '@dcloudio/uni-app'
 
 // 状态栏高度：自定义导航栏用它做顶部留白（H5 端没有状态栏，取 12px 保底）
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
@@ -84,29 +99,176 @@ const jobDesc = [
 	'暂无数据'
 ]
 
+// 收藏状态：true 显示实心星，以接口返回的 favorited 为准
+const collecting = ref(false)
+
 // 获取岗位详情
 const jobDetail = ref({} as JobDetail)
 const getJob = async (id: number) => {
 	try {
 		const res = await getJobDetail(id)
-		console.log(res)
 		jobDetail.value = res
+		// 回显后端返回的收藏状态
+		console.log(res)
+		collecting.value = res.favorited
 	} catch (error) {
 		console.log(error)
 	}
 }
 
-// 跳转 AI 分析匹配度页面
-const navigateToAI = () => {
-	uni.navigateTo({
-		url: '/pages/aiAnalyse/index'
-	})
+// 后端时间是字符串，格式化成 YYYY-MM-DD HH:mm（解析失败时原样展示）
+const formatPublishDate = (value: string) => {
+	const date = new Date(value)
+	if (Number.isNaN(date.getTime())) return value
+	const pad = (num: number) => String(num).padStart(2, '0')
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+// 当前岗位 id，页面通过 ?id= 传入
+const jobId = ref<number | null>(null)
+
+// ===== 岗位匹配分析：流式获取，直接在本页展示 =====
+const matchOpen = ref(false)
+const matchLoading = ref(false)
+const matchText = ref('')
+let matchController: AbortController | null = null
+
+// 防抖：500ms 内的重复点击直接忽略
+const MATCH_DEBOUNCE = 500
+let lastMatchAt = 0
+
+const startMatch = async () => {
+	if (!jobId.value) {
+		uni.showToast({ title: '岗位信息不存在', icon: 'none' })
+		return
+	}
+
+	const now = Date.now()
+	if (now - lastMatchAt < MATCH_DEBOUNCE) return
+	lastMatchAt = now
+
+	// 重新分析前先清空并中止上一次请求
+	matchController?.abort()
+	matchText.value = ''
+	matchOpen.value = true
+	matchLoading.value = true
+
+	const controller = new AbortController()
+	matchController = controller
+	try {
+		await streamMatch({
+			jobId: jobId.value,
+			signal: controller.signal,
+			onDelta: (delta) => {
+				matchText.value += delta
+			}
+		})
+	} catch (error) {
+		// 主动关闭不算失败
+		if (!controller.signal.aborted) {
+			console.error('[detail] 匹配分析失败', error)
+			uni.showToast({ title: error instanceof Error ? error.message : '匹配分析失败', icon: 'none' })
+		}
+	} finally {
+		if (matchController === controller) {
+			matchController = null
+			matchLoading.value = false
+		}
+	}
+}
+
+const closeMatch = () => {
+	matchController?.abort()
+	matchController = null
+	matchLoading.value = false
+	matchOpen.value = false
+}
+
+// 保存当前匹配报告
+const savingReport = ref(false)
+
+const saveReport = async () => {
+	if (!jobId.value) {
+		uni.showToast({ title: '岗位信息不存在', icon: 'none' })
+		return
+	}
+	const content = matchText.value.trim()
+	if (!content) {
+		uni.showToast({ title: '暂无可保存的报告', icon: 'none' })
+		return
+	}
+	if (savingReport.value) return
+
+	savingReport.value = true
+	try {
+		// 先查是否已保存过，已保存则提示会覆盖
+		const existing = await getMatchReport(jobId.value)
+		if (existing) {
+			const confirmed = await new Promise<boolean>((resolve) => {
+				uni.showModal({
+					title: '提示',
+					content: '该岗位已保存过匹配报告，继续保存会覆盖旧报告，是否继续？',
+					confirmText: '继续保存',
+					confirmColor: '#007c77',
+					success: (res) => resolve(!!res.confirm),
+					fail: () => resolve(false)
+				})
+			})
+			if (!confirmed) return
+		}
+
+		await saveMatchReport(jobId.value, content)
+		uni.showToast({ title: '报告已保存', icon: 'success' })
+	} catch (error) {
+		console.error('[detail] 保存匹配报告失败', error)
+		uni.showToast({ title: getErrorMessage(error, '保存失败，请稍后重试'), icon: 'none' })
+	} finally {
+		savingReport.value = false
+	}
+}
+
+// 安卓物理返回：优先关闭匹配结果
+onBackPress(() => {
+	if (!matchOpen.value) return false
+	closeMatch()
+	return true
+})
+
+onUnload(() => {
+	matchController?.abort()
+	matchController = null
+})
+
+const collectJob = async () => {
+	if (!jobId.value) {
+		uni.showToast({ title: '岗位信息不存在', icon: 'none' })
+		return
+	}
+
+	try {
+		// 已收藏：再点一次调用取消收藏
+		if (collecting.value) {
+			await removeFavorite(jobId.value)
+			collecting.value = false
+			uni.showToast({ title: '已取消收藏', icon: 'none' })
+			return
+		}
+
+		const res = await addFavorite(jobId.value)
+		collecting.value = true
+		uni.showToast({ title: `已收藏，共 ${res.favoriteCount} 个职位`, icon: 'none' })
+	} catch (error) {
+		console.error('[detail] 收藏操作失败', error)
+		uni.showToast({ title: getErrorMessage(error, '操作失败，请稍后重试'), icon: 'none' })
+	}
 }
 
 onLoad((options) => {
 	// 列表页通过 ?id= 传入岗位 id
 	const id = Number(options?.id)
-	if (id) getJob(id)
+	if (!id) return
+	jobId.value = id
+	getJob(id)
 })
 
 // 返回上一页
@@ -382,5 +544,31 @@ const onBack = () => {
 			background-image: linear-gradient(180deg, #007c77 0%, #00746f 100%);
 		}
 	}
+}
+
+/* ===== 匹配分析浮层 ===== */
+.match-overlay {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 30;
+	overflow-y: auto;
+	box-sizing: border-box;
+	background-color: #f4f8f7;
+	background-image: linear-gradient(180deg, #e2f3f0 0%, #f1f8f7 30%, #f4f8f7 100%);
+}
+
+/* 打开 / 关闭：淡入淡出 + 轻微位移 */
+.match-enter-active,
+.match-leave-active {
+	transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.match-enter-from,
+.match-leave-to {
+	opacity: 0;
+	transform: translateY(16rpx);
 }
 </style>

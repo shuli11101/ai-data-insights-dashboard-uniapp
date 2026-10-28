@@ -55,7 +55,7 @@ withDefaults(
 	flex-direction: column;
 	box-sizing: border-box;
 	width: 100%;
-	height: 392rpx;
+	height: 356rpx;
 	padding: 32rpx;
 	background-color: #ffffff;
 	border: 2rpx solid #e9eeec;

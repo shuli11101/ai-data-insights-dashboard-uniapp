@@ -81,6 +81,13 @@
 			}
 		},
 		{
+			"path": "pages/user/edit/index",
+			"style": {
+				"navigationBarTitleText": "编辑资料",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/user/setting/index",
 			"style": {
 				"navigationBarTitleText": "设置"

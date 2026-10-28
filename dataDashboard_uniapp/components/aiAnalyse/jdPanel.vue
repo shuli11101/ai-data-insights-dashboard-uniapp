@@ -3,7 +3,7 @@
 		<!-- ===== 顶部操作 ===== -->
 		<view class="top-actions">
 			<text class="top-label">分析报告</text>
-			<text class="back-chat" @click="goBackChat">返回聊天</text>
+			<text class="back-chat" @click="goBackChat">{{ backText || '返回聊天' }}</text>
 		</view>
 
 		<!-- ===== 标题 ===== -->
@@ -104,6 +104,8 @@ const props = defineProps<{
 	knowledgeRequirements: { label: string; value: string[] | string }[]
 	jdInterviewPrep: { label: string; value: string }[]
 	jdHiddenInfo: { label: string; value: string }[]
+	/** 返回按钮文案 */
+	backText?: string
 }>()
 
 const jdBasicInfo = computed(() => props.jdBasicInfo)

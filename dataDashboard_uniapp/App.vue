@@ -40,4 +40,10 @@ uni-page-body {
 .uni-tabbar {
 	height: 66px !important;
 }
+
+/* uni.showModal（H5）弹窗圆角 */
+.uni-modal {
+	border-radius: 16px;
+	overflow: hidden;
+}
 </style>

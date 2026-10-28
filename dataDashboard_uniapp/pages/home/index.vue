@@ -263,17 +263,17 @@ onLoad(() => {
 	.main {
 		padding: 0 20rpx 20rpx;
 
-		// 轮播高度与卡片一致；左右负边距让轮播比正文更宽
+		// 轮播高度按宣传图比例计算（678 × 536/1024 ≈ 356rpx），避免裁切
 		.hero-swiper {
-			height: 392rpx;
-			margin: 0 -16rpx;
+			height: 356rpx;
+			margin: 0 16rpx;
 		}
 
 		// ===== 品牌宣传图：铺满轮播区域 =====
 		.hero-image {
 			display: block;
 			width: 100%;
-			height: 392rpx;
+			height: 356rpx;
 			border-radius: 32rpx;
 		}
 
@@ -283,7 +283,7 @@ onLoad(() => {
 			flex-direction: column;
 			box-sizing: border-box;
 			width: 100%;
-			height: 392rpx;
+			height: 356rpx;
 			padding: 32rpx;
 			background-color: #ffffff;
 			border: 2rpx solid #e9eeec;

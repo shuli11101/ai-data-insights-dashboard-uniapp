@@ -31,7 +31,7 @@
 					<text class="profile-meta">{{ metaText }}</text>
 				</view>
 
-				<view class="edit-pill">
+				<view class="edit-pill" @click="navigateToEdit">
 					<image class="edit-icon" src="/static/icon/user/edit.svg" mode="aspectFit" />
 					<text class="edit-text">编辑</text>
 				</view>
@@ -58,7 +58,7 @@
 
 		<!-- ===== 快捷入口 ===== -->
 		<view class="quick-actions">
-			<view class="action">
+			<view @click="navigateToEdit" class="action">
 				<view class="action-icon">
 					<image class="action-icon-img" src="/static/icon/user/edit.svg" mode="aspectFit" />
 				</view>
@@ -199,6 +199,7 @@ const avgMatch = computed(() => profile.value?.avgMatch ?? null)
 const loadProfile = async () => {
 	try {
 		profile.value = await getUserProfile()
+		console.log('用户信息:', profile.value)
 	} catch (error) {
 		console.error('[user] 获取用户信息失败', error)
 	}
@@ -208,6 +209,13 @@ const loadProfile = async () => {
 onShow(() => {
 	loadProfile()
 })
+
+// 跳转编辑资料
+const navigateToEdit = () => {
+	uni.navigateTo({
+		url: '/pages/user/edit/index'
+	})
+}
 
 // 跳转偏好设置
 const navigateToPersonal = () => {

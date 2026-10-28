@@ -67,7 +67,7 @@
 					:salaryRange="salaryRange" :targetJob="targetJob" :salaryMedian="salaryMedian"
 					:coreAdvantages="coreAdvantages" :skillGaps="skillGaps" :jobAdvice="jobAdvice" @goBack="goBack" />
 			</view>
-			<view v-else-if="hasResult && title === 'JD 匹配'" class="result-stage"
+			<view v-else-if="hasResult && title === 'JD 描述'" class="result-stage"
 				:style="{ top: statusBarHeight + 'px' }">
 				<JdPanel :jdBasicInfo="jdBasicInfo" :jdDuties="jdDuties" :knowledgeRequirements="knowledgeRequirements"
 					:jdInterviewPrep="jdInterviewPrep" :jdHiddenInfo="jdHiddenInfo" @goBack="goBack" />
@@ -137,13 +137,13 @@ const suggestions: Suggestion[] = [
 
 const navigateTo = (item: Suggestion) => {
 	if (item.scene === activeTab.value) return
-	const jump = item.scene === 'skill' ? '技术栈评估' : 'JD 匹配'
+	const jump = item.scene === 'skill' ? '技术栈评估' : 'JD 描述'
 	uni.navigateTo({
 		url: '/pages/aiAnalyse/index?title=' + jump,
 	})
 }
 
-// 当前分析场景，默认按 JD 匹配处理
+// 当前分析场景，默认按 JD 描述处理
 const activeTab = ref<AiScene>('jd')
 // 开始分析：单轮场景只传一条 user 消息
 const startAnalysis = () => {
@@ -207,7 +207,7 @@ const coreAdvantages = computed(() => sectionEntries(sections.value, '核心优�
 const skillGaps = computed(() => sectionItems(sections.value, '待补充技能'))
 const jobAdvice = computed(() => sectionItems(sections.value, '求职建议'))
 
-// JD 匹配分析
+// JD 描述分析结果
 const JD_BASIC_FIELDS = ['职位名称', '所属部门', '工作地点', '薪资范围']
 
 const jdBasicInfo = computed(() =>
@@ -260,7 +260,7 @@ const restoreFromConversation = async (conversationId: string) => {
 			title.value = '技术栈评估'
 			activeTab.value = 'skill'
 		} else if (detail.scene === 'jd') {
-			title.value = 'JD 匹配'
+			title.value = 'JD 描述'
 			activeTab.value = 'jd'
 		} else {
 			// 非单轮分析场景没有对应卡片，交给对话页
@@ -293,7 +293,7 @@ onLoad((options) => {
 	// 本页只负责技术栈 / JD 两种单轮分析，其余入口统一交给多轮对话页
 	if (type === '技术栈评估') {
 		activeTab.value = 'skill'
-	} else if (type === 'JD 匹配') {
+	} else if (type === 'JD 描述') {
 		activeTab.value = 'jd'
 	} else {
 		uni.redirectTo({ url: '/pages/aiChat/index' })

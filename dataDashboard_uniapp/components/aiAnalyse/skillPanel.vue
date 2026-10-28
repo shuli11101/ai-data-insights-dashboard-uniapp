@@ -3,7 +3,7 @@
 		<!-- ===== 顶部操作 ===== -->
 		<view class="top-actions">
 			<text class="top-label">分析报告</text>
-			<text class="back-chat" @click="goBackChat">返回聊天</text>
+			<text class="back-chat" @click="goBackChat">{{ backText || '返回聊天' }}</text>
 		</view>
 
 		<!-- ===== 标题 ===== -->
@@ -162,6 +162,11 @@ const props = defineProps({
 	jobAdvice: {
 		type: Array as PropType<string[]>,
 		default: () => []
+	},
+	/** 返回按钮文案 */
+	backText: {
+		type: String,
+		default: ''
 	},
 })
 

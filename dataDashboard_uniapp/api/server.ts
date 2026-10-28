@@ -53,6 +53,8 @@ interface JobDetailRaw {
   district: string
   publish_date: string
   created_at: string
+  /** 当前登录用户是否已收藏该岗位 */
+  favorited: boolean
 }
 
 export interface JobDetail extends Omit<JobDetailRaw, 'salary_min' | 'salary_max'> {

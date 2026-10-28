@@ -70,19 +70,27 @@
 				</view>
 			</view>
 		</view>
+
+		<!-- ===== 内嵌分析结果：返回只关闭浮层，不离开本页 ===== -->
+		<transition name="overlay">
+			<view v-if="preview" class="result-overlay" :style="{ paddingTop: statusBarHeight + 'px' }">
+				<analysisResult :scene="preview.scene" :text="preview.text" @back="closePreview" />
+			</view>
+		</transition>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { onShow } from '@dcloudio/uni-app'
+import { onBackPress, onShow } from '@dcloudio/uni-app'
 import { computed, reactive, ref } from 'vue'
 
-import { deleteConversations, fetchConversations } from '@/api/ai'
+import { deleteConversations, fetchConversation, fetchConversations } from '@/api/ai'
+import analysisResult from '@/components/aiAnalyse/analysisResult.vue'
 
 // 状态栏高度：自定义导航栏用它做顶部留白（H5 端为 0）
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
 
-/** 入口卡片：技术栈评估 / JD 匹配 */
+/** 入口卡片：技术栈评估 / JD 描述 */
 interface EntryItem {
 	id: number
 	icon: string
@@ -129,7 +137,7 @@ const headerText = reactive({
 // 技术栈分析和jd匹配 card
 const entries: EntryItem[] = [
 	{ id: 1, icon: '/static/icon/aiAnalyse/entry-stack-teal.svg', title: '技术栈评估', desc: '输入技能，了解自身实力' },
-	{ id: 2, icon: '/static/icon/aiAnalyse/entry-jd-teal.svg', title: 'JD 匹配', desc: '粘贴岗位，测算匹配度' }
+	{ id: 2, icon: '/static/icon/aiAnalyse/entry-jd-teal.svg', title: 'JD 描述', desc: '粘贴岗位，描述岗位职责' }
 ]
 
 // 开始会话
@@ -143,7 +151,7 @@ const sessions = ref<SessionItem[]>([])
 /** 后端 scene → 列表展示配置 */
 const SCENE_META = {
 	skill: { title: '技术栈评估', type: 'stack', icon: '/static/icon/aiAnalyse/session-chart-teal.svg' },
-	jd: { title: 'JD 匹配', type: 'match', icon: '/static/icon/aiAnalyse/session-square.svg' },
+	jd: { title: 'JD 描述', type: 'match', icon: '/static/icon/aiAnalyse/session-square.svg' },
 	drawer: { title: '市场洞察', type: 'match', icon: '/static/icon/aiAnalyse/session-square.svg' },
 	chat: { title: 'AI 对话', type: 'chat', icon: '/static/icon/aiAnalyse/session-chat-teal.svg' },
 } as const
@@ -175,6 +183,7 @@ const formatTime = (iso: string) => {
 	return `${pad(date.getMonth() + 1)}/${pad(date.getDate())}`
 }
 
+// 加载历史会话列表
 const loadSessions = async () => {
 	try {
 		const list = await fetchConversations(20)
@@ -207,11 +216,45 @@ onShow(() => {
 	randomTopic.value = getRandomTopic()
 })
 
-// 打开历史会话：单轮分析进结果卡片页，多轮对话进对话页
-const openSession = (item: SessionItem) => {
-	const path = item.analysis ? '/pages/aiAnalyse/index' : '/pages/aiChat/index'
-	uni.navigateTo({ url: `${path}?conversationId=${item.id}` })
+// 当前内嵌展示的历史分析结果；null 表示不展示
+const preview = ref<{ scene: 'skill' | 'jd'; text: string } | null>(null)
+
+// 打开历史会话：单轮分析直接在本页渲染结果组件，多轮对话仍进对话页
+const openSession = async (item: SessionItem) => {
+	if (!item.analysis) {
+		uni.navigateTo({ url: `/pages/aiChat/index?conversationId=${item.id}` })
+		return
+	}
+
+	try {
+		const detail = await fetchConversation(item.id)
+		// 只有技术栈 / JD 才有对应结果组件，其余交给对话页
+		if (detail.scene !== 'skill' && detail.scene !== 'jd') {
+			uni.navigateTo({ url: `/pages/aiChat/index?conversationId=${item.id}` })
+			return
+		}
+		const lastReply = [...detail.messages].reverse().find((message) => message.role === 'assistant')
+		preview.value = {
+			scene: detail.scene,
+			text: lastReply?.content ?? ''
+		}
+	} catch (error) {
+		console.error('[aiAnalyseHome] 加载分析记录失败', error)
+		uni.showToast({ title: '分析记录加载失败', icon: 'none' })
+	}
 }
+
+// 关闭内嵌结果，返回到会话列表（页面不跳转）
+const closePreview = () => {
+	preview.value = null
+}
+
+// 安卓物理返回：优先关闭内嵌结果
+onBackPress(() => {
+	if (!preview.value) return false
+	preview.value = null
+	return true
+})
 
 // ===== 批量删除 =====
 const selecting = ref(false)
@@ -650,5 +693,34 @@ const toAnalyse = () => {
 			}
 		}
 	}
+}
+
+/* ===== 内嵌分析结果：覆盖整页，返回只关闭浮层 ===== */
+.result-overlay {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 30;
+	overflow-y: auto;
+	box-sizing: border-box;
+	/* 与全局页面背景保持一致：顶部浅青渐变，640rpx 后过渡到底色 */
+	background-color: #f7f7f7;
+	background-image: linear-gradient(180deg, #e8f5f5 0%, #f7f7f7 100%);
+	background-repeat: no-repeat;
+	background-size: 100% 640rpx;
+}
+
+/* 打开 / 关闭动画：淡入淡出 + 轻微位移 */
+.overlay-enter-active,
+.overlay-leave-active {
+	transition: opacity 0.06s ease, transform 0.06s ease;
+}
+
+.overlay-enter-from,
+.overlay-leave-to {
+	opacity: 0;
+	transform: translateY(16rpx);
 }
 </style>
