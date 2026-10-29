@@ -62,6 +62,9 @@ export const useJobList = (getFilters: () => JobFilters = () => ({})) => {
 			pagination.total = res.total
 			// 已加载条数达到总数，说明没有更多了
 			if (list.value.length >= res.total) finished.value = true
+		} catch (error) {
+			console.error('[useJobList] 获取岗位列表失败', error)
+			uni.showToast({ title: '岗位列表加载失败', icon: 'none' })
 		} finally {
 			loading.value = false
 		}

@@ -92,6 +92,27 @@
 			"style": {
 				"navigationBarTitleText": "设置"
 			}
+		},
+		{
+			"path": "pages/user/report/index",
+			"style": {
+				"navigationBarTitleText": "分析报告",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/user/favorites/index",
+			"style": {
+				"navigationBarTitleText": "收藏职位",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/user/agreement/index",
+			"style": {
+				"navigationBarTitleText": "用户协议与隐私",
+				"navigationStyle": "custom"
+			}
 		}
 	],
 	"tabBar": {

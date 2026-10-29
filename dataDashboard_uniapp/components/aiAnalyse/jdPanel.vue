@@ -17,19 +17,22 @@
 			<!-- 01 岗位基本信息 -->
 			<view class="section-meta">
 				<text class="meta-text">岗位基本信息</text>
-				<text class="meta-text">JD 信息有限</text>
+				<text v-if="!companyLine" class="meta-text">JD 信息有限</text>
 			</view>
 
 			<text class="job-title">{{ jdBasicInfo[0]?.value }}</text>
 
-			<view class="notice">
+			<!-- 有公司 / 地点时直接展示，提示条只在信息缺失时出现 -->
+			<text v-if="companyLine" class="job-sub">{{ companyLine }}</text>
+
+			<view class="notice" v-else>
 				<text class="notice-icon">i</text>
 				<text class="notice-text">公司与地点未写明，以下内容仅按岗位类型解读。</text>
 			</view>
 
 			<view class="summary">
 				<view v-for="(col, index) in basicCols" :key="col.label" class="summary-col"
-					:class="{ 'summary-col--divided': index > 0 }">
+					:class="{ 'summary-col--divided': index > 0, 'summary-col--accent': index === 0 }">
 					<text class="summary-label">{{ col.label }}</text>
 					<text class="summary-value" :class="{ 'summary-value--accent': index === 0 }">{{ col.value }}</text>
 				</view>
@@ -104,6 +107,14 @@ const props = defineProps<{
 	knowledgeRequirements: { label: string; value: string[] | string }[]
 	jdInterviewPrep: { label: string; value: string }[]
 	jdHiddenInfo: { label: string; value: string }[]
+	/** 公司（详情页传入后展示真实信息，不再提示信息缺失） */
+	company?: string
+	/** 工作地点，如 深圳 · 南山区 */
+	location?: string
+	/** 月薪范围，如 20-35K */
+	salaryText?: string
+	/** 经验要求，如 3-4年经验 */
+	experience?: string
 	/** 返回按钮文案 */
 	backText?: string
 }>()
@@ -126,12 +137,19 @@ const goBackChat = () => {
 	emit('goBack')
 }
 
-// 基本信息三列：接口未返回薪资 / 经验 / 学历时用占位展示
-const basicCols = [
-	{ label: '月薪范围', value: '28–38K · 14薪' },
-	{ label: '经验', value: '5–10 年' },
-	{ label: '学历', value: '本科及以上' },
-]
+// 公司 · 地点：有值时展示，替代「信息缺失」提示
+const companyLine = computed(() => [props.company, props.location].filter(Boolean).join(' · '))
+
+// 从 AI 解析出的基本信息里取某一项
+const pickBasic = (label: string) =>
+	props.jdBasicInfo.find((item) => item.label === label)?.value || '未提及'
+
+// 基本信息三列：优先用详情页传入的真实数据，缺失时回退到 AI 解析结果
+const basicCols = computed(() => [
+	{ label: '月薪范围', value: props.salaryText || pickBasic('薪资范围') },
+	{ label: '经验', value: props.experience || '未提及' },
+	{ label: '学历', value: '未提及' }
+])
 </script>
 
 <style lang="scss" scoped>
@@ -217,6 +235,15 @@ const basicCols = [
 	color: #17252b;
 }
 
+/* 公司 · 地点 */
+.job-sub {
+	display: block;
+	margin-top: 10rpx;
+	font-size: 23rpx;
+	line-height: 1.4;
+	color: #65747c;
+}
+
 /* 提示条：浅青底 + 细描边圆形图标 */
 .notice {
 	display: flex;
@@ -260,12 +287,16 @@ const basicCols = [
 	margin-top: 32rpx;
 
 	.summary-col {
-		flex: 1;
-		min-width: 0;
+		// flex: 1;
+		min-width: 120rpx;
 
 		&--divided {
 			padding-left: 26rpx;
 			border-left: 2rpx solid #e9eff0;
+		}
+
+		&--accent {
+			min-width: 230rpx;
 		}
 	}
 
@@ -284,7 +315,7 @@ const basicCols = [
 		color: #3d4b54;
 
 		&--accent {
-			font-size: 38rpx;
+			font-size: 32rpx;
 			font-weight: 700;
 			letter-spacing: -0.6rpx;
 			color: #007c77;

@@ -10,6 +10,17 @@ interface ApiResult<T> {
 // 接口基础地址（后端已开启 CORS，前端可跨域直接访问）
 const baseURL = 'http://127.0.0.1:3000/api'
 
+// 后端返回的相对文件路径（如 /uploads/a.png）要拼到服务地址上，而不是当前页面域名
+const fileOrigin = baseURL.replace(/\/api\/?$/, '')
+
+/** 把后端返回的头像等文件地址补全成可直接访问的绝对地址 */
+export const resolveFileUrl = (url?: string | null) => {
+	if (!url) return ''
+	// 已经是完整地址或本地临时文件，原样返回
+	if (/^(https?:|data:|blob:|file:)/i.test(url)) return url
+	return `${fileOrigin}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
 // 全局唯一的请求实例：集中配置超时、请求头与拦截器
 export const http = createLuchRequest({
 	baseURL,

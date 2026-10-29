@@ -9,7 +9,7 @@
 		<!-- ===== 头像 ===== -->
 		<view class="avatar-section">
 			<view class="avatar" @click="chooseAvatar">
-				<image v-if="avatarPreview || avatar" class="avatar-img" :src="avatarPreview || avatar" mode="aspectFill" />
+				<image v-if="avatarSrc" class="avatar-img" :src="avatarSrc" mode="aspectFill" />
 				<text v-else class="avatar-text">{{ avatarText }}</text>
 
 				<view class="camera-badge">
@@ -93,8 +93,9 @@
 </template>
 
 <script setup lang="ts">
-import { getUserProfile } from '@/api/user'
+import { getUserProfile, updateUserProfile, uploadAvatar } from '@/api/user'
 import cityPicker from '@/components/user/cityPicker.vue'
+import { getErrorMessage, resolveFileUrl } from '@/utils/request'
 import { onLoad } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 
@@ -111,6 +112,9 @@ const avatar = ref('')
 const avatarPreview = ref('')
 
 const avatarText = computed(() => nickname.value?.[0] || '未')
+
+// 头像展示地址：本地预览优先，否则把服务端地址补全成绝对路径
+const avatarSrc = computed(() => avatarPreview.value || resolveFileUrl(avatar.value))
 
 // 手机号脱敏：138****8000
 const maskedPhone = computed(
@@ -147,14 +151,42 @@ const chooseAvatar = () => {
 	})
 }
 
-// 保存资料：修改资料接口待确认，这里只做名称校验
-const save = () => {
+// 保存中：防止重复提交
+const saving = ref(false)
+
+// 保存资料：调用 PUT /user/profile 更新
+const save = async () => {
 	const name = nickname.value.trim()
 	if (name.length < 2 || name.length > 12) {
 		uni.showToast({ title: '名称需 2–12 个字符', icon: 'none' })
 		return
 	}
-	uni.showToast({ title: '保存接口待接入', icon: 'none' })
+	if (saving.value) return
+
+	saving.value = true
+	try {
+		// 1. 选了新头像：先上传，拿到线上地址；没选则沿用原值
+		let avatarUrl = avatar.value
+		if (avatarPreview.value) {
+			avatarUrl = (await uploadAvatar(avatarPreview.value)).url
+		}
+
+		// 2. 再更新资料
+		await updateUserProfile({
+			nickname: name,
+			avatar: avatarUrl,
+			currentJob: currentJob.value.trim(),
+			location: location.value
+		})
+		uni.showToast({ title: '保存成功', icon: 'success' })
+		// 返回上一页，「我的」页 onShow 会重新拉取最新资料
+		setTimeout(() => uni.navigateBack(), 600)
+	} catch (error) {
+		console.error('[editProfile] 更新用户信息失败', error)
+		uni.showToast({ title: getErrorMessage(error, '保存失败，请稍后重试'), icon: 'none' })
+	} finally {
+		saving.value = false
+	}
 }
 
 // 返回上一页；直接进入本页时回「我的」

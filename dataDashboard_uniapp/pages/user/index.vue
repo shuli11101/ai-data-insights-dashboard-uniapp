@@ -16,7 +16,7 @@
 		<view class="profile-card">
 			<view class="profile-top">
 				<view class="avatar">
-					<image v-if="profile?.avatar" class="avatar-img" :src="profile.avatar" mode="aspectFill" />
+					<image v-if="avatarSrc" class="avatar-img" :src="avatarSrc" mode="aspectFill" />
 					<text v-else class="avatar-text">{{ avatarText }}</text>
 				</view>
 
@@ -38,18 +38,18 @@
 			</view>
 
 			<view class="stats">
-				<view class="stat">
+				<view class="stat" @click="navigateToReport">
 					<text class="stat-value">{{ profile?.reportCount ?? 0 }}</text>
 					<text class="stat-label">分析报告</text>
 				</view>
 				<view class="stat-divider"></view>
 				<view class="stat">
-					<text class="stat-value stat-value--accent">{{ avgMatch ?? '--' }}<text class="stat-unit"
-							v-if="avgMatch !== null">%</text></text>
+					<text class="stat-value stat-value--accent">{{ averageScore ?? '--' }}<text class="stat-unit"
+							v-if="averageScore !== null">%</text></text>
 					<text class="stat-label">平均匹配</text>
 				</view>
 				<view class="stat-divider"></view>
-				<view class="stat">
+				<view class="stat" @click="navigateToFavorites">
 					<text class="stat-value">{{ profile?.favoriteCount ?? 0 }}</text>
 					<text class="stat-label">收藏职位</text>
 				</view>
@@ -142,7 +142,7 @@
 
 			<view class="row-divider"></view>
 
-			<view class="list-row">
+			<view @click="navigateToAgreement" class="list-row">
 				<image class="row-icon" src="/static/icon/user/document.svg" mode="aspectFit" />
 				<text class="row-title">用户协议与隐私</text>
 				<view class="row-right">
@@ -171,6 +171,7 @@
 
 <script setup lang="ts">
 import { getUserProfile, type UserProfile } from '@/api/user'
+import { resolveFileUrl } from '@/utils/request'
 import { onShow } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 
@@ -179,6 +180,9 @@ const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
 
 // 用户基本信息
 const profile = ref<UserProfile | null>(null)
+
+// 头像地址：后端可能返回相对路径，统一补全成绝对地址
+const avatarSrc = computed(() => resolveFileUrl(profile.value?.avatar))
 
 // 头像兜底：昵称首字
 const avatarText = computed(() => profile.value?.nickname?.[0] || '未')
@@ -193,7 +197,7 @@ const metaText = computed(() => {
 })
 
 // 平均匹配度：后端暂未返回时显示 --
-const avgMatch = computed(() => profile.value?.avgMatch ?? null)
+const averageScore = computed(() => profile.value?.averageScore ?? null)
 
 // 获取用户信息
 const loadProfile = async () => {
@@ -221,6 +225,27 @@ const navigateToEdit = () => {
 const navigateToPersonal = () => {
 	uni.navigateTo({
 		url: '/pages/user/personal/index'
+	})
+}
+
+// 跳转分析报告列表
+const navigateToReport = () => {
+	uni.navigateTo({
+		url: '/pages/user/report/index'
+	})
+}
+
+// 跳转收藏职位列表
+const navigateToFavorites = () => {
+	uni.navigateTo({
+		url: '/pages/user/favorites/index'
+	})
+}
+
+// 跳转用户协议与隐私
+const navigateToAgreement = () => {
+	uni.navigateTo({
+		url: '/pages/user/agreement/index'
 	})
 }
 

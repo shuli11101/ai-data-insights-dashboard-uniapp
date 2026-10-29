@@ -33,7 +33,7 @@
 
 			<view class="row-divider"></view>
 
-			<view class="list-row">
+			<view @click="navigateToAgreement" class="list-row">
 				<image class="row-icon" src="/static/icon/user/document.svg" mode="aspectFit" />
 				<text class="row-title">用户协议与隐私</text>
 				<view class="row-right">
@@ -64,6 +64,13 @@ const statusBarHeight = uni.getSystemInfoSync().statusBarHeight ?? 0
 // 返回上一页
 const goBack = () => {
 	uni.navigateBack()
+}
+
+// 跳转用户协议与隐私
+const navigateToAgreement = () => {
+	uni.navigateTo({
+		url: '/pages/user/agreement/index'
+	})
 }
 </script>
 

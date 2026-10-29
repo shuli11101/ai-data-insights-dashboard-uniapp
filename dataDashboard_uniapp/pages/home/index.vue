@@ -61,7 +61,7 @@
 			<!-- 列表标题 -->
 			<view class="section-head" v-if="jobList.length">
 				<text class="section-title">推荐职位</text>
-				<text class="section-count">{{ pagination.total }} 个机会</text>
+				<text class="section-count">约 {{ totalText }} 个机会</text>
 			</view>
 
 			<!-- 岗位列表：单列信息流 -->
@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { onLoad, onReachBottom } from '@dcloudio/uni-app'
 
 
@@ -119,6 +119,14 @@ const query = reactive<JobFilters>({
 
 // 岗位列表
 const { list: jobList, pagination, refresh, loadMore } = useJobList(() => query)
+
+// 总岗位数取近似值：只保留最高位，其余位补 0 并加 “+”，如 12345 → 10000+；个位数原样展示
+const totalText = computed(() => {
+	const total = pagination.total
+	if (total < 10) return String(total)
+	const unit = 10 ** (String(total).length - 1)
+	return `${Math.floor(total / unit) * unit}+`
+})
 
 onReachBottom(loadMore)
 
@@ -158,13 +166,18 @@ const salaryBars = ref<SalaryBar[]>([])
 // 薪资分布数据：最高 15.5k、最低 105，差两个数量级，按比例画小柱子会看不见，
 // 所以高度用开方压缩；想改成等比，把 sqrt 去掉即可
 const getSalaryChartData = async () => {
-	const res = await getSalaryRange()
-	const max = Math.max(...res.map(({ jobCount }) => jobCount))
-	salaryBars.value = res.map(({ salary_range, jobCount }) => ({
-		label: salary_range.replace(/K$/, ''),
-		// 下限 10%，保证最小的区间也能看到一根短柱
-		height: Math.max(10, Math.sqrt(jobCount / max) * 100)
-	}))
+	try {
+		const res = await getSalaryRange()
+		const max = Math.max(...res.map(({ jobCount }) => jobCount))
+		salaryBars.value = res.map(({ salary_range, jobCount }) => ({
+			label: salary_range.replace(/K$/, ''),
+			// 下限 10%，保证最小的区间也能看到一根短柱
+			height: Math.max(10, Math.sqrt(jobCount / max) * 100)
+		}))
+	} catch (error) {
+		console.error('[home] 获取薪酬分布失败', error)
+		uni.showToast({ title: '薪酬分布加载失败', icon: 'none' })
+	}
 }
 
 // 经验与平均薪资折线图
@@ -177,11 +190,16 @@ const experiencePoints = ref<ExperiencePoint[]>([])
 
 // 经验薪资数据：接口已按经验从低到高排列，直接映射为折线点
 const getExperienceChartData = async () => {
-	const res = await getExperienceSalary()
-	experiencePoints.value = res.map(({ experience, avg_salary }) => ({
-		label: experience,
-		value: avg_salary
-	}))
+	try {
+		const res = await getExperienceSalary()
+		experiencePoints.value = res.map(({ experience, avg_salary }) => ({
+			label: experience,
+			value: avg_salary
+		}))
+	} catch (error) {
+		console.error('[home] 获取经验薪资失败', error)
+		uni.showToast({ title: '经验薪资加载失败', icon: 'none' })
+	}
 }
 
 // 技术栈热度横向条形图
@@ -195,12 +213,17 @@ const skillBars = ref<SkillBar[]>([])
 
 // 技术栈热度数据：接口已按频次降序，取前 5 条
 const getSkillChartData = async () => {
-	const res = await getSkillTags()
-	const max = res[0]?.hot_count || 1
-	skillBars.value = res.slice(0, 5).map(({ skill_tag, hot_count }) => ({
-		label: skill_tag,
-		percent: Math.round((hot_count / max) * 100)
-	}))
+	try {
+		const res = await getSkillTags()
+		const max = res[0]?.hot_count || 1
+		skillBars.value = res.slice(0, 5).map(({ skill_tag, hot_count }) => ({
+			label: skill_tag,
+			percent: Math.round((hot_count / max) * 100)
+		}))
+	} catch (error) {
+		console.error('[home] 获取技术栈热度失败', error)
+		uni.showToast({ title: '技术栈热度加载失败', icon: 'none' })
+	}
 }
 
 // 城市岗位分布分段条
@@ -216,28 +239,33 @@ const DISTRICT_CITY_COUNT = 4
 
 // 城市岗位分布数据：城市按岗位数降序取前 4，其余（含接口的兜底项「其他」）合并成一个段
 const getDistrictChartData = async () => {
-	const res = await getDistrict()
-	// 接口里的「其他」是兜底汇总项，不参与城市排序
-	const cities = res
-		.filter(({ area_name }) => area_name !== '其他')
-		.sort((a, b) => b.job_count - a.job_count)
-	const top = cities.slice(0, DISTRICT_CITY_COUNT)
-	const rest =
-		cities.slice(DISTRICT_CITY_COUNT).reduce((sum, { job_count }) => sum + job_count, 0) +
-		(res.find(({ area_name }) => area_name === '其他')?.job_count ?? 0)
-	const total = top.reduce((sum, { job_count }) => sum + job_count, 0) + rest
-	if (!total) return
+	try {
+		const res = await getDistrict()
+		// 接口里的「其他」是兜底汇总项，不参与城市排序
+		const cities = res
+			.filter(({ area_name }) => area_name !== '其他')
+			.sort((a, b) => b.job_count - a.job_count)
+		const top = cities.slice(0, DISTRICT_CITY_COUNT)
+		const rest =
+			cities.slice(DISTRICT_CITY_COUNT).reduce((sum, { job_count }) => sum + job_count, 0) +
+			(res.find(({ area_name }) => area_name === '其他')?.job_count ?? 0)
+		const total = top.reduce((sum, { job_count }) => sum + job_count, 0) + rest
+		if (!total) return
 
-	districtSlices.value = [
-		...top.map(({ area_name, job_count }) => ({
-			name: area_name,
-			percent: Math.round((job_count / total) * 100)
-		})),
-		{
-			name: '其他',
-			percent: Math.round((rest / total) * 100)
-		}
-	]
+		districtSlices.value = [
+			...top.map(({ area_name, job_count }) => ({
+				name: area_name,
+				percent: Math.round((job_count / total) * 100)
+			})),
+			{
+				name: '其他',
+				percent: Math.round((rest / total) * 100)
+			}
+		]
+	} catch (error) {
+		console.error('[home] 获取城市岗位分布失败', error)
+		uni.showToast({ title: '城市岗位分布加载失败', icon: 'none' })
+	}
 }
 
 onLoad(() => {

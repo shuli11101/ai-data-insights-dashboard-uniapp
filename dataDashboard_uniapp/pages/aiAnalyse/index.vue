@@ -87,6 +87,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { ref, computed, watch } from 'vue'
 
 import { useAIStream } from '@/composables/useAIStream'
+import { useJdReport } from '@/composables/useJdReport'
 import { fetchConversation } from '@/api/ai'
 import type { AiScene } from '@/api/ai'
 import { sectionNumber, sectionText, sectionItems, sectionEntries } from '@/utils/aiText'
@@ -208,48 +209,7 @@ const skillGaps = computed(() => sectionItems(sections.value, '待补充技能')
 const jobAdvice = computed(() => sectionItems(sections.value, '求职建议'))
 
 // JD 描述分析结果
-const JD_BASIC_FIELDS = ['职位名称', '所属部门', '工作地点', '薪资范围']
-
-const jdBasicInfo = computed(() =>
-	JD_BASIC_FIELDS.map((label) => {
-		const item = sectionItems(sections.value, '岗位基本信息').find((text) => text.startsWith(label))
-		const value = item?.slice(label.length).replace(/^[：:]\s*/, '').trim()
-		return { label, value: value || '未提及' }
-	}),
-)
-// 岗位职责
-const JD_BASIC_DUTIES_FIELDS = ['日常做什么', '核心产出', '协作对象', '优先级判断']
-const jdDuties = computed(() =>
-	JD_BASIC_DUTIES_FIELDS.map((label) => {
-		const item = sectionItems(sections.value, '岗位职责').find((text) => text.startsWith(label))
-		const value = item?.slice(label.length).replace(/^[：:]\s*/, '').trim()
-		return { label, value: value || '未提及' }
-	}),
-)
-
-// 认知要求：固定 2 个字段，从「认知要求」小节按「字段名：值」拆出
-const KNOWLEDGE_FIELDS = ['硬性要求', '软性要求']
-
-const knowledgeRequirements = computed(() =>
-	KNOWLEDGE_FIELDS.map((label) => {
-		const item = sectionItems(sections.value, '认知要求').find((text) => text.startsWith(label)) || ''
-		const value = item?.slice(label.length).replace(/^[：:]\s*/, '').trim().split('、') || []
-		return { label, value: value || '未提及' }
-	}
-	),
-)
-
-// 「维度：内容」类小节（隐藏信息 / 面试准备方向）：按第一个冒号拆成标签与内容，维度名由 AI 决定，不写死
-const splitPairs = (title: string) =>
-	sectionItems(sections.value, title).map((text) => {
-		const match = /^(.+?)[：:]\s*(.*)$/.exec(text.trim())
-		return match ? { label: match[1]!, value: match[2]! } : { label: '', value: text }
-	})
-
-const jdHiddenInfo = computed(() => splitPairs('隐藏信息'))
-const jdInterviewPrep = computed(() => splitPairs('面试准备方向'))
-
-
+const { jdBasicInfo, jdDuties, knowledgeRequirements, jdHiddenInfo, jdInterviewPrep } = useJdReport(sections)
 
 // 从历史会话恢复单轮分析结果
 const restoreFromConversation = async (conversationId: string) => {

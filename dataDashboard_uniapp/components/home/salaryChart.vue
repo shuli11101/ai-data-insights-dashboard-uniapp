@@ -35,7 +35,7 @@ withDefaults(
 	box-sizing: border-box;
 	width: 100%;
 	height: 356rpx;
-	padding: 36rpx 32rpx 24rpx;
+	padding: 36rpx 32rpx 40rpx;
 	background-color: #ffffff;
 	border: 2rpx solid #e9eeec;
 	border-radius: 32rpx;
@@ -77,7 +77,7 @@ withDefaults(
 			align-items: flex-end;
 			justify-content: center;
 			width: 100%;
-			height: 200rpx;
+			height: 176rpx;
 		}
 
 		.bar {

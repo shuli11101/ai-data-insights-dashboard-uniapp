@@ -94,8 +94,8 @@
 
 			<text class="footnote">匹配分析基于当前 JD 与求职意向生成，仅供参考。</text>
 
-			<!-- 保存报告 -->
-			<view class="save-btn" :class="{ 'is-disabled': loading || saving }" @click="onSave">
+			<!-- 保存报告：查看已保存的报告时不展示 -->
+			<view v-if="!readonly" class="save-btn" :class="{ 'is-disabled': loading || saving }" @click="onSave">
 				{{ saving ? '保存中…' : '保存报告' }}
 			</view>
 		</view>
@@ -114,6 +114,8 @@ const props = defineProps<{
 	loading: boolean
 	/** 是否正在保存报告 */
 	saving?: boolean
+	/** 只读模式：查看已保存的报告，隐藏保存按钮 */
+	readonly?: boolean
 }>()
 
 const emit = defineEmits<{

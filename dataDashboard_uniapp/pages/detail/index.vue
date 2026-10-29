@@ -64,7 +64,7 @@
 
 		<!-- ===== 底部操作栏 ===== -->
 		<view class="bottom-bar">
-			<view class="btn btn-jd">
+			<view class="btn btn-jd" @click="openJdAnalysis">
 				<text class="btn-text">JD 岗位描述</text>
 			</view>
 			<view class="btn btn-ai" @click="startMatch">
@@ -79,16 +79,39 @@
 					@save="saveReport" />
 			</view>
 		</transition>
+		<!-- ===== JD 深度解读：本页内流式展示 ===== -->
+		<transition name="match">
+			<view v-if="jdOpen" class="match-overlay" :style="{ paddingTop: statusBarHeight + 'px' }">
+				<JdPanel v-if="jdText" :jdBasicInfo="jdBasicInfo" :jdDuties="jdDuties"
+					:knowledgeRequirements="knowledgeRequirements" :jdInterviewPrep="jdInterviewPrep"
+					:jdHiddenInfo="jdHiddenInfo" :company="jobDetail.company"
+					:location="[jobDetail.city, jobDetail.district].filter(Boolean).join(' · ')"
+					:salary-text="`${jobDetail.salaryMin}-${jobDetail.salaryMax}K`"
+					:experience="jobDetail.experience" backText="返回岗位" @goBack="closeJd" />
+
+				<!-- 首段内容到达前显示加载态 -->
+				<view v-else class="jd-loading">
+					<view class="jd-loading-head">
+						<text class="jd-loading-label">分析报告</text>
+						<text class="jd-loading-back" @click="closeJd">返回岗位</text>
+					</view>
+					<text class="jd-loading-text">正在解读岗位描述…</text>
+				</view>
+			</view>
+		</transition>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { getJobDetail, type JobDetail } from '@/api/server'
-import { streamMatch } from '@/api/ai'
+import { streamAI, streamMatch } from '@/api/ai'
 import { addFavorite, getMatchReport, removeFavorite, saveMatchReport } from '@/api/user'
 import { getErrorMessage } from '@/utils/request'
+import { parseSections } from '@/utils/aiText'
+import { useJdReport } from '@/composables/useJdReport'
 import matchPanel from '@/components/aiAnalyse/matchPanel.vue'
+import JdPanel from '@/components/aiAnalyse/jdPanel.vue'
 import { onBackPress, onLoad, onUnload } from '@dcloudio/uni-app'
 
 // 状态栏高度：自定义导航栏用它做顶部留白（H5 端没有状态栏，取 12px 保底）
@@ -227,8 +250,12 @@ const saveReport = async () => {
 	}
 }
 
-// 安卓物理返回：优先关闭匹配结果
+// 安卓物理返回：优先关闭浮层
 onBackPress(() => {
+	if (jdOpen.value) {
+		closeJd()
+		return true
+	}
 	if (!matchOpen.value) return false
 	closeMatch()
 	return true
@@ -237,6 +264,8 @@ onBackPress(() => {
 onUnload(() => {
 	matchController?.abort()
 	matchController = null
+	jdController?.abort()
+	jdController = null
 })
 
 const collectJob = async () => {
@@ -261,6 +290,74 @@ const collectJob = async () => {
 		console.error('[detail] 收藏操作失败', error)
 		uni.showToast({ title: getErrorMessage(error, '操作失败，请稍后重试'), icon: 'none' })
 	}
+}
+
+// ===== JD 深度解读：流式获取，直接在本页展示 =====
+const jdOpen = ref(false)
+const jdLoading = ref(false)
+const jdText = ref('')
+let jdController: AbortController | null = null
+
+const jdSections = computed(() => parseSections(jdText.value))
+const { jdBasicInfo, jdDuties, knowledgeRequirements, jdHiddenInfo, jdInterviewPrep } = useJdReport(jdSections)
+
+// 把岗位详情拼成 JD 文本，作为分析输入
+const buildJdInput = () => {
+	const detail = jobDetail.value
+	return [
+		`职位名称：${detail.job_name}`,
+		`公司：${detail.company || '未提供'}`,
+		`工作地点：${[detail.city, detail.district].filter(Boolean).join(' · ') || '未提供'}`,
+		`薪资范围：${detail.salaryMin}-${detail.salaryMax}K`,
+		`经验要求：${detail.experience || '未提供'}`,
+		`技能要求：${detail.skill_tags?.join('、') || '未提供'}`
+	].join('\n')
+}
+
+// 打开 JD 深度解读：与匹配分析各自独立一条流，直接在本页展示结果
+const openJdAnalysis = () => {
+	if (!jobDetail.value?.job_name) {
+		uni.showToast({ title: '岗位信息加载中，请稍后再试', icon: 'none' })
+		return
+	}
+	if (jdLoading.value) return
+
+	jdController?.abort()
+	jdText.value = ''
+	jdLoading.value = true
+	jdOpen.value = true
+
+	const controller = new AbortController()
+	jdController = controller
+	streamAI({
+		scene: 'jd',
+		messages: [{ role: 'user', content: buildJdInput() }],
+		signal: controller.signal,
+		onDelta: (delta) => {
+			jdText.value += delta
+		}
+	})
+		.catch((error) => {
+			// 主动关闭不算失败
+			if (controller.signal.aborted) return
+			console.error('[detail] JD 解读失败', error)
+			jdOpen.value = false
+			uni.showToast({ title: error instanceof Error ? error.message : 'JD 解读失败', icon: 'none' })
+		})
+		.finally(() => {
+			if (jdController === controller) {
+				jdController = null
+				jdLoading.value = false
+			}
+		})
+}
+
+// 关闭 JD 解读浮层
+const closeJd = () => {
+	jdController?.abort()
+	jdController = null
+	jdLoading.value = false
+	jdOpen.value = false
 }
 
 onLoad((options) => {
@@ -558,6 +655,39 @@ const onBack = () => {
 	box-sizing: border-box;
 	background-color: #f4f8f7;
 	background-image: linear-gradient(180deg, #e2f3f0 0%, #f1f8f7 30%, #f4f8f7 100%);
+}
+
+/* ===== JD 解读加载态 ===== */
+.jd-loading {
+	padding-top: 24rpx;
+
+	.jd-loading-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 40rpx;
+	}
+
+	.jd-loading-label {
+		font-size: 23rpx;
+		line-height: 1;
+		color: #8a979e;
+	}
+
+	.jd-loading-back {
+		font-size: 24rpx;
+		line-height: 1;
+		color: #65747c;
+	}
+
+	.jd-loading-text {
+		display: block;
+		margin-top: 120rpx;
+		font-size: 26rpx;
+		line-height: 1.4;
+		text-align: center;
+		color: #8a979e;
+	}
 }
 
 /* 打开 / 关闭：淡入淡出 + 轻微位移 */
