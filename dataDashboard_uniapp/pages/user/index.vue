@@ -172,6 +172,7 @@
 <script setup lang="ts">
 import { getUserProfile, type UserProfile } from '@/api/user'
 import { resolveFileUrl } from '@/utils/request'
+import { isLoggedIn, redirectToLogin } from '@/utils/auth'
 import { onShow } from '@dcloudio/uni-app'
 import { computed, ref } from 'vue'
 
@@ -211,6 +212,11 @@ const loadProfile = async () => {
 
 // tabBar 页用 onShow：从编辑资料等页面返回时也能刷新
 onShow(() => {
+	// 未登录时不能进入个人中心：跳转登录页，且不再请求用户信息
+	if (!isLoggedIn()) {
+		redirectToLogin()
+		return
+	}
 	loadProfile()
 })
 

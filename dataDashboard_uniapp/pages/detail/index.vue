@@ -1,5 +1,5 @@
 <template>
-	<view class="job-detail" :style="{ paddingTop: statusBarHeight + 'px' }">
+	<view class="job-detail" :class="{ 'is-guest': isGuest }" :style="{ paddingTop: statusBarHeight + 'px' }">
 		<!-- ===== 顶部导航：返回 + 收藏 / 分享 ===== -->
 		<view class="navbar">
 			<view class="back" @click="onBack"></view>
@@ -62,8 +62,8 @@
 				{{ formatPublishDate(jobDetail.publish_date) }}</text>
 		</view>
 
-		<!-- ===== 底部操作栏 ===== -->
-		<view class="bottom-bar">
+		<!-- ===== 底部操作栏：未登录时隐藏，由登录引导替代 ===== -->
+		<view class="bottom-bar" v-if="!isGuest">
 			<view class="btn btn-jd" @click="openJdAnalysis">
 				<text class="btn-text">JD 岗位描述</text>
 			</view>
@@ -71,6 +71,9 @@
 				<text class="btn-text btn-text-light">AI 分析匹配度</text>
 			</view>
 		</view>
+
+		<!-- ===== 未登录访客：遮住下半部分内容并引导登录 ===== -->
+		<GuestLogin v-if="isGuest" />
 
 		<!-- ===== 匹配分析结果：本页内流式展示，返回只关闭浮层 ===== -->
 		<transition name="match">
@@ -109,13 +112,18 @@ import { streamAI, streamMatch } from '@/api/ai'
 import { addFavorite, getMatchReport, removeFavorite, saveMatchReport } from '@/api/user'
 import { getErrorMessage } from '@/utils/request'
 import { parseSections } from '@/utils/aiText'
+import { isLoggedIn } from '@/utils/auth'
 import { useJdReport } from '@/composables/useJdReport'
 import matchPanel from '@/components/aiAnalyse/matchPanel.vue'
 import JdPanel from '@/components/aiAnalyse/jdPanel.vue'
+import GuestLogin from '@/components/detail/guestLogin.vue'
 import { onBackPress, onLoad, onUnload } from '@dcloudio/uni-app'
 
 // 状态栏高度：自定义导航栏用它做顶部留白（H5 端没有状态栏，取 12px 保底）
 const statusBarHeight = uni.getSystemInfoSync().statusBarHeight || 12
+
+// 访客态：未登录时只露出岗位摘要与公司信息，正文由渐变遮罩挡住并引导登录
+const isGuest = ref(!isLoggedIn())
 
 // 静态数据：职位描述（接口暂未返回）
 const jobDesc = [
@@ -274,6 +282,15 @@ const collectJob = async () => {
 		return
 	}
 
+	// 收藏需要登录：访客先提示并引导去登录页
+	if (isGuest.value) {
+		uni.showToast({ title: '登录后才能收藏职位', icon: 'none' })
+		setTimeout(() => {
+			uni.navigateTo({ url: '/pages/login/index' })
+		}, 800)
+		return
+	}
+
 	try {
 		// 已收藏：再点一次调用取消收藏
 		if (collecting.value) {
@@ -381,6 +398,19 @@ const onBack = () => {
 	padding-bottom: calc(180rpx + env(safe-area-inset-bottom));
 	font-family: Inter, -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Helvetica, Arial,
 		sans-serif;
+
+	/* 访客态：浅青渐变底，与下半部分遮罩自然衔接
+	   同时锁定页面：只做布局锁定，不拦截触摸手势，避免滑动把遮罩下的正文滚出来；
+	   系统左右滑的返回手势由原生层处理，不受影响 */
+	&.is-guest {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		overflow: hidden;
+		background-image: linear-gradient(180deg, #e2f3f0 0%, #f1f8f7 30%, #f4f8f7 100%);
+	}
 
 	/* ===== 顶部导航 ===== */
 	.navbar {

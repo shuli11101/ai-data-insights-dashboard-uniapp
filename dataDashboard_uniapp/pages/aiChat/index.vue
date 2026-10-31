@@ -51,19 +51,24 @@
 			<view class="composer-box">
 				<input class="composer-input" v-model="message" type="text" placeholder="发消息或按住说话…" confirm-type="send"
 					confirm-hold :focus="inputFocused" @focus="inputFocused = true" @blur="inputFocused = false"
-					:adjust-position="true" cursor-spacing="20" placeholder-class="composer-placeholder" @confirm="sendMessage" />
+					:adjust-position="true" cursor-spacing="20" placeholder-class="composer-placeholder"
+					@confirm="sendMessage" />
 			</view>
 			<view class="composer-row">
 				<view class="icon-btn">
-					<image class="icon-btn-icon icon-btn-icon--plus" src="/static/icon/aiAnalyse/plus.svg" mode="aspectFit" />
+					<image class="icon-btn-icon icon-btn-icon--plus" src="/static/icon/aiAnalyse/plus.svg"
+						mode="aspectFit" />
 				</view>
 
 				<view class="row-right">
 					<view class="icon-btn">
-						<image class="icon-btn-icon icon-btn-icon--mic" src="/static/icon/aiAnalyse/mic.svg" mode="aspectFit" />
+						<image class="icon-btn-icon icon-btn-icon--mic" src="/static/icon/aiAnalyse/mic.svg"
+							mode="aspectFit" />
 					</view>
-					<view class="icon-btn icon-btn--send" :class="{ 'icon-btn--disabled': sending }" @click="sendMessage">
-						<image class="icon-btn-icon icon-btn-icon--send" src="/static/icon/aiAnalyse/send.svg" mode="aspectFit" />
+					<view class="icon-btn icon-btn--send" :class="{ 'icon-btn--disabled': sending }"
+						@click="sendMessage">
+						<image class="icon-btn-icon icon-btn-icon--send" src="/static/icon/aiAnalyse/send.svg"
+							mode="aspectFit" />
 					</view>
 				</view>
 			</view>
@@ -82,6 +87,7 @@ import { nextTick, ref } from 'vue'
 
 import { fetchConversation, streamAI } from '@/api/ai'
 import type { AiScene, ChatTurn } from '@/api/ai'
+import { isLoggedIn, redirectToLogin } from '@/utils/auth'
 
 /** 一条对话消息：用户输入或 AI 回复 */
 interface ChatMessage {
@@ -280,6 +286,12 @@ const loadHistory = async (id: string) => {
 }
 
 onLoad((options) => {
+	if (!isLoggedIn()) {
+		redirectToLogin()
+		return
+	}
+
+
 	const id = options?.conversationId
 	if (id) {
 		conversationId.value = id

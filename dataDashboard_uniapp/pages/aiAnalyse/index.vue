@@ -91,6 +91,7 @@ import { useJdReport } from '@/composables/useJdReport'
 import { fetchConversation } from '@/api/ai'
 import type { AiScene } from '@/api/ai'
 import { sectionNumber, sectionText, sectionItems, sectionEntries } from '@/utils/aiText'
+import { isLoggedIn, redirectToLogin } from '@/utils/auth'
 import SkillPanel from '@/components/aiAnalyse/skillPanel.vue'
 import JdPanel from '@/components/aiAnalyse/jdPanel.vue'
 
@@ -239,6 +240,12 @@ const restoreFromConversation = async (conversationId: string) => {
 }
 
 onLoad((options) => {
+	// 未登录不允许使用 AI 分析：直接替换为登录页，不再解析后续参数
+	if (!isLoggedIn()) {
+		redirectToLogin()
+		return
+	}
+
 	// 从历史记录进入：按会话场景恢复结果
 	const conversationId = options?.conversationId
 	if (conversationId) {

@@ -62,18 +62,6 @@
 					class="consent-link">《隐私政策》</text></text>
 		</view>
 
-		<!-- ===== 其他登录方式 ===== -->
-		<view class="divider">
-			<view class="divider-line"></view>
-			<text class="divider-text">其他登录方式</text>
-			<view class="divider-line"></view>
-		</view>
-
-		<view class="wechat-btn">
-			<image class="wechat-icon" src="/static/icon/auth/wechat.svg" mode="aspectFit" />
-			<text class="wechat-text">微信登录</text>
-		</view>
-
 		<!-- ===== 隐私提示 ===== -->
 		<view class="tip">
 			<image class="tip-icon" src="/static/icon/auth/lock.svg" mode="aspectFit" />
@@ -390,54 +378,6 @@ const goBack = () => {
 		color: #3d4b54;
 		text-decoration: underline;
 		text-decoration-color: #cbd5d6;
-	}
-}
-
-/* ===== 其他登录方式 ===== */
-.divider {
-	display: flex;
-	align-items: center;
-	margin-top: 56rpx;
-
-	.divider-line {
-		flex: 1;
-		height: 2rpx;
-		background-color: #dfe7e8;
-	}
-
-	.divider-text {
-		flex-shrink: 0;
-		margin: 0 24rpx;
-		font-size: 21rpx;
-		line-height: 1;
-		color: #78868f;
-	}
-}
-
-/* ===== 微信登录 ===== */
-.wechat-btn {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	box-sizing: border-box;
-	height: 88rpx;
-	margin-top: 48rpx;
-	background-color: rgba(255, 255, 255, 0.82);
-	border: 2rpx solid #d8e2e3;
-	border-radius: 23rpx;
-
-	.wechat-icon {
-		flex-shrink: 0;
-		width: 40rpx;
-		height: 40rpx;
-		margin-right: 12rpx;
-	}
-
-	.wechat-text {
-		font-size: 26rpx;
-		font-weight: 500;
-		line-height: 1;
-		color: #3d4b54;
 	}
 }
 
